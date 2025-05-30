@@ -1,0 +1,91 @@
+:root {
+  --primary-color: #6b37bf;
+  --primary-hover-color: #8b5ccc;
+  --header-text-color: white;
+  --header-text-hover-color: #e9d9ff;
+}
+
+.header {
+  padding: 24px;
+  background-color: var(--primary-color);
+  color: white;
+  text-align: center;
+}
+
+.headerContent {
+  margin: auto;
+  max-width: 600px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.bodyContainer {
+  margin: auto;
+  max-width: 600px;
+  padding: 16px;
+}
+
+.footer {
+  padding: 8px 0;
+  text-align: center;
+  background-color: var(--primary-color);
+}
+
+.footerContent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.menuButtonHolder {
+  position: absolute;
+  left: 0;
+}
+
+.menuButton {
+  box-shadow: none;
+}
+
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.contentWrapper {
+  flex: 1;
+}
+
+.title {
+  margin: 0;
+  color: white;
+}
+
+.link {
+  padding: 12px 24px;
+}
+
+.link:hover {
+  color: var(--header-text-hover-color);
+}
+
+.footerText {
+  color: white;
+  font-size: 14px;
+}
+
+.githubButton {
+  color: white;
+  font-size: 14px;
+  text-decoration: none;
+  box-shadow: none;
+  margin: 0px 8px;
+}
+
+.navLink {
+  margin: auto;
+  width: 100%;
+}
