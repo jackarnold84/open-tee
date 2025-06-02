@@ -10,21 +10,21 @@ import (
 )
 
 type TeeTimeSearchRequest struct {
-	Date         string `json:"date" validate:"required,datetime=2006-01-02"`
-	ZipCode      string `json:"zipCode" validate:"required,len=5,numeric"`
-	Radius       int    `json:"radius" validate:"required,min=1,max=50"`
-	Holes        int    `json:"holes" validate:"oneof=0 9 18"`
-	Players      int    `json:"players" validate:"min=0,max=4"`
-	DealsOnly    bool   `json:"dealsOnly"`
-	PriceMin     int    `json:"priceMin" validate:"min=0"`
-	PriceMax     int    `json:"priceMax" validate:"min=0,gtefield=PriceMin"`
-	StartHourMin int    `json:"startHourMin" validate:"min=0,max=23"`
-	StartHourMax int    `json:"startHourMax" validate:"min=0,max=23,gtefield=StartHourMin"`
+	Date         string `json:"date" dynamodbav:"date" validate:"required,datetime=2006-01-02"`
+	ZipCode      string `json:"zipCode" dynamodbav:"zipCode" validate:"required,len=5,numeric"`
+	Radius       int    `json:"radius" dynamodbav:"radius" validate:"required,min=1,max=50"`
+	Holes        int    `json:"holes" dynamodbav:"holes" validate:"oneof=0 9 18"`
+	Players      int    `json:"players" dynamodbav:"players" validate:"min=0,max=4"`
+	DealsOnly    bool   `json:"dealsOnly" dynamodbav:"dealsOnly"`
+	PriceMin     int    `json:"priceMin" dynamodbav:"priceMin" validate:"min=0"`
+	PriceMax     int    `json:"priceMax" dynamodbav:"priceMax" validate:"min=0,gtefield=PriceMin"`
+	StartHourMin int    `json:"startHourMin" dynamodbav:"startHourMin" validate:"min=0,max=23"`
+	StartHourMax int    `json:"startHourMax" dynamodbav:"startHourMax" validate:"min=0,max=23,gtefield=StartHourMin"`
 }
 
 type TeeTimeSearchResponse struct {
-	Courses       []Course `json:"courses"`
-	TotalTeeTimes int      `json:"totalTeeTimes"`
+	Courses       []Course `json:"courses" dynamodbav:"courses"`
+	TotalTeeTimes int      `json:"totalTeeTimes" dynamodbav:"totalTeeTimes"`
 }
 
 type Course struct {

@@ -43,6 +43,16 @@ Resources:
           Properties:
             Method: POST
             Path: /opentee/tee-time-search
+        CreateAlert:
+          Type: Api
+          Properties:
+            Method: POST
+            Path: /opentee/create-alert
+        DeleteAlert:
+          Type: Api
+          Properties:
+            Method: DELETE
+            Path: /opentee/delete-alert/{alertId}
       Environment:
         Variables:
           PASSWORD: !Ref AuthPassword
@@ -51,9 +61,9 @@ Resources:
             - Sid: DynamoAccess
               Effect: Allow
               Action:
-                - "dynamodb:GetItem"
                 - "dynamodb:PutItem"
-              Resource: !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/appState"
+                - "dynamodb:DeleteItem"
+              Resource: !GetAtt OpenTeeTable.Arn
             - Sid: EmailAccess
               Effect: Allow
               Action:
@@ -77,6 +87,30 @@ Resources:
             Name: OpenTeeUpdate
             Schedule: rate(5 minutes)
             Enabled: false
+      Policies:
+        - Statement:
+            - Sid: DynamoAccess
+              Effect: Allow
+              Action:
+                - "dynamodb:Scan"
+              Resource: !GetAtt OpenTeeTable.Arn
+            - Sid: EmailAccess
+              Effect: Allow
+              Action:
+                - "ses:SendEmail"
+                - ses:SendRawEmail
+              Resource: !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/praisedformula5@gmail.com
+
+  OpenTeeTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: OpenTeeTable
+      PrimaryKey:
+        Name: key
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
 
 Outputs:
   OpenTeeApiFunctionArn:
@@ -85,8 +119,9 @@ Outputs:
   OpenTeeSchedulerFunctionArn:
     Description: "ARN of the OpenTeeScheduler Lambda function"
     Value: !GetAtt OpenTeeScheduler.Arn
+  OpenTeeTableArn:
+    Description: "ARN of the OpenTee DynamoDB table"
+    Value: !GetAtt OpenTeeTable.Arn
   OpenTeeApiEndpoint:
     Description: "API Gateway endpoint for OpenTeeApi"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/opentee/"
-    Export:
-      Name: !Sub "${AWS::StackName}-OpenTeeApiEndpoint"

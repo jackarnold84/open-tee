@@ -19,9 +19,9 @@ func ParseRequestBody(body string, v any) error {
 	return validate.Struct(v)
 }
 
-func ParseQueryStrings(queryStrings map[string]string, v any) error {
-	qsData, _ := json.Marshal(queryStrings)
-	if err := json.Unmarshal(qsData, v); err != nil {
+func ParseParameters(parameters map[string]string, v any) error {
+	data, _ := json.Marshal(parameters)
+	if err := json.Unmarshal(data, v); err != nil {
 		return err
 	}
 	return validate.Struct(v)

@@ -17,7 +17,7 @@ func buildResponse(statusCode int, payload any) events.APIGatewayProxyResponse {
 			"Access-Control-Allow-Origin":  "*",
 		},
 		MultiValueHeaders: map[string][]string{
-			"Access-Control-Allow-Methods": {"GET", "POST"},
+			"Access-Control-Allow-Methods": {"GET", "POST", "DELETE"},
 		},
 	}
 }
