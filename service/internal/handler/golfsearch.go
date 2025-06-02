@@ -9,7 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type GolfSearchRequest struct {
+type TeeTimeSearchRequest struct {
 	Date         string `json:"date" validate:"required,datetime=2006-01-02"`
 	ZipCode      string `json:"zipCode" validate:"required,len=5,numeric"`
 	Radius       int    `json:"radius" validate:"required,min=1,max=50"`
@@ -22,7 +22,7 @@ type GolfSearchRequest struct {
 	StartHourMax int    `json:"startHourMax" validate:"min=0,max=23,gtefield=StartHourMin"`
 }
 
-type GolfSearchResponse struct {
+type TeeTimeSearchResponse struct {
 	Courses       []Course `json:"courses"`
 	TotalTeeTimes int      `json:"totalTeeTimes"`
 }
@@ -38,8 +38,8 @@ type Course struct {
 	AverageRating float64 `json:"averageRating"`
 }
 
-func GolfSearch(req GolfSearchRequest) (GolfSearchResponse, error) {
-	var res GolfSearchResponse
+func TeeTimeSearch(req TeeTimeSearchRequest) (TeeTimeSearchResponse, error) {
+	var res TeeTimeSearchResponse
 	validate := validator.New()
 	if err := validate.Struct(req); err != nil {
 		return res, err

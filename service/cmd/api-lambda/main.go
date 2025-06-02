@@ -20,11 +20,11 @@ func lambdaHandler(ctx context.Context, request events.APIGatewayProxyRequest) (
 	case "POST":
 		switch request.Path {
 		case "/opentee/tee-time-search":
-			var req handler.GolfSearchRequest
+			var req handler.TeeTimeSearchRequest
 			if err := lamb.ParseRequestBody(request.Body, &req); err != nil {
 				return lamb.BadRequest(err), nil
 			}
-			res, err := handler.GolfSearch(req)
+			res, err := handler.TeeTimeSearch(req)
 			if err != nil {
 				return lamb.Error(err, "tee time search error"), nil
 			}

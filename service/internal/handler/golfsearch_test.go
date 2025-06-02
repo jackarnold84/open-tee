@@ -11,7 +11,7 @@ import (
 func TestGolfSearchReal(t *testing.T) {
 	t.Skip("skipping real api call")
 
-	req := GolfSearchRequest{
+	req := TeeTimeSearchRequest{
 		Date:         "2025-06-07",
 		ZipCode:      "60607",
 		Radius:       20,
@@ -22,7 +22,7 @@ func TestGolfSearchReal(t *testing.T) {
 		StartHourMin: 6,
 		StartHourMax: 18,
 	}
-	res, err := GolfSearch(req)
+	res, err := TeeTimeSearch(req)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, res.Courses)
 
