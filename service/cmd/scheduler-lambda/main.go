@@ -2,17 +2,16 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"opentee/internal/handler"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-func handler(ctx context.Context, event events.EventBridgeEvent) error {
-	fmt.Println("Hello, world! Event ID:", event.ID)
-	return nil
+func lambdaHandler(ctx context.Context, event events.EventBridgeEvent) (handler.ProcessAlertsResponse, error) {
+	return handler.ProcessAlerts(ctx)
 }
 
 func main() {
-	lambda.Start(handler)
+	lambda.Start(lambdaHandler)
 }

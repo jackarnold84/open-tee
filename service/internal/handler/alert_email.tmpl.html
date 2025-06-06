@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenTee Alert</title>
+</head>
+
+<body>
+    <h2>OpenTee Alert</h2>
+    {{if .AlertOptions.NewCourses}}
+    {{if .Changes.NewCourses}}
+    <h3>New Courses</h3>
+    <table border="1" cellpadding="4" cellspacing="0">
+        <tr>
+            <th>Name</th>
+            <th>Location</th>
+            <th>Tee Times</th>
+            <th>Price</th>
+            <th>Time Range</th>
+        </tr>
+        {{range .Changes.NewCourses}}
+        <tr>
+            <td>{{.Name}}</td>
+            <td>{{.Location}}</td>
+            <td>{{.TeeTimes}}</td>
+            <td>${{printf "%.2f" .PriceMin}}</td>
+            <td>{{.StartTimeMin}} - {{.StartTimeMax}}</td>
+        </tr>
+        {{end}}
+    </table>
+    {{end}}
+    {{end}}
+    {{if .AlertOptions.TeeTimeChanges}}
+    {{if .Changes.TeeTimeChanges}}
+    <h3>Tee Time Changes</h3>
+    <table border="1" cellpadding="4" cellspacing="0">
+        <tr>
+            <th>Name</th>
+            <th>Location</th>
+            <th>Prev Tee Times</th>
+            <th>Curr Tee Times</th>
+            <th>Time Range</th>
+        </tr>
+        {{range .Changes.TeeTimeChanges}}
+        <tr>
+            <td>{{.Current.Name}}</td>
+            <td>{{.Current.Location}}</td>
+            <td>{{.Prev.TeeTimes}}</td>
+            <td>{{.Current.TeeTimes}}</td>
+            <td>{{.Current.StartTimeMin}} - {{.Current.StartTimeMax}}</td>
+        </tr>
+        {{end}}
+    </table>
+    {{end}}
+    {{end}}
+    {{if .AlertOptions.CostChanges}}
+    {{if .Changes.CostChanges}}
+    <h3>Cost Changes</h3>
+    <table border="1" cellpadding="4" cellspacing="0">
+        <tr>
+            <th>Name</th>
+            <th>Location</th>
+            <th>Prev Price</th>
+            <th>Curr Price</th>
+            <th>Time Range</th>
+        </tr>
+        {{range .Changes.CostChanges}}
+        <tr>
+            <td>{{.Current.Name}}</td>
+            <td>{{.Current.Location}}</td>
+            <td>${{printf "%.2f" .Prev.PriceMin}}</td>
+            <td>${{printf "%.2f" .Current.PriceMin}}</td>
+            <td>{{.Current.StartTimeMin}} - {{.Current.StartTimeMax}}</td>
+        </tr>
+        {{end}}
+    </table>
+    {{end}}
+    {{end}}
+</body>
+
+</html>

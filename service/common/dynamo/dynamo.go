@@ -59,3 +59,16 @@ func (t Table) DeleteItem(ctx context.Context, key string) error {
 	})
 	return err
 }
+
+func (t Table) ScanItems(ctx context.Context, limit int, out any) error {
+	input := &dynamodb.ScanInput{
+		TableName:      aws.String(t.TableName),
+		ConsistentRead: aws.Bool(t.ConsistentRead),
+		Limit:          aws.Int32(int32(limit)),
+	}
+	result, err := dynamoClient.Scan(ctx, input)
+	if err != nil {
+		return err
+	}
+	return attributevalue.UnmarshalListOfMaps(result.Items, out)
+}

@@ -11,7 +11,7 @@ import (
 
 var healthEvent = events.APIGatewayProxyRequest{
 	HTTPMethod: "GET",
-	Path:       "/opentee/health",
+	Resource:   "/opentee/health",
 }
 
 func TestHandler(t *testing.T) {

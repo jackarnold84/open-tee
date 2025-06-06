@@ -4,5 +4,5 @@
     "headers": {
         "Content-Type": "application/json"
     },
-    "body": "{\"teeTimeSearch\": {\"date\":\"2025-06-07\",\"zipCode\":\"60607\",\"radius\":20,\"holes\":18,\"players\":2,\"dealsOnly\":true,\"priceMax\":100,\"startHourMin\":6,\"startHourMax\":18}, \"alertType\": \"NEW\"}"
+    "body": "{\"teeTimeSearch\": {\"date\":\"2025-06-13\",\"zipCode\":\"60607\",\"radius\":20,\"holes\":18,\"players\":2,\"dealsOnly\":true,\"priceMax\":100,\"startHourMin\":6,\"startHourMax\":18}, \"alertOptions\": {\"newCourses\": true, \"teeTimeChanges\": false, \"costChanges\": false}}"
 }

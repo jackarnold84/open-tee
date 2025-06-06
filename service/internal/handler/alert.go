@@ -4,19 +4,19 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"opentee/common/dynamo"
 
 	"github.com/go-playground/validator/v10"
 )
 
-const (
-	OpenTeeTable    = "OpenTeeTable"
-	OpenTeeTableKey = "key"
-)
-
 type CreateAlertRequest struct {
 	TeeTimeSearch TeeTimeSearchRequest `json:"teeTimeSearch" validate:"required"`
-	AlertType     string               `json:"alertType" validate:"required,oneof=NEW ALL"`
+	AlertOptions  AlertOptions         `json:"alertOptions" validate:"required"`
+}
+
+type AlertOptions struct {
+	NewCourses     bool `json:"newCourses" dynamodbav:"newCourses"`
+	TeeTimeChanges bool `json:"teeTimeChanges" dynamodbav:"teeTimeChanges"`
+	CostChanges    bool `json:"costChanges" dynamodbav:"costChanges"`
 }
 
 type CreateAlertResponse struct {
@@ -29,13 +29,6 @@ type DeleteAlertRequest struct {
 
 type DeleteAlertResponse struct {
 	Message string `json:"message"`
-}
-
-type AlertItem struct {
-	AlertID       string                `dynamodbav:"key" json:"alertId"`
-	AlertType     string                `dynamodbav:"alertType" json:"alertType"`
-	TeeTimeSearch TeeTimeSearchRequest  `dynamodbav:"teeTimeSearch" json:"teeTimeSearch"`
-	Result        TeeTimeSearchResponse `dynamodbav:"result" json:"result"`
 }
 
 func CreateAlert(ctx context.Context, req CreateAlertRequest) (CreateAlertResponse, error) {
@@ -52,16 +45,13 @@ func CreateAlert(ctx context.Context, req CreateAlertRequest) (CreateAlertRespon
 	alertID := genAlertId()
 	alertItem := AlertItem{
 		AlertID:       alertID,
-		AlertType:     req.AlertType,
+		AlertOptions:  req.AlertOptions,
 		TeeTimeSearch: req.TeeTimeSearch,
 		Result:        teeTimeRes,
 	}
 
-	dbTable := dynamo.Table{
-		TableName: OpenTeeTable,
-		KeyName:   OpenTeeTableKey,
-	}
-	if err := dbTable.PutItem(ctx, alertItem); err != nil {
+	db := AlertDB()
+	if err := db.Put(ctx, alertItem); err != nil {
 		return CreateAlertResponse{}, fmt.Errorf("failed to save alert to DB: %v", err)
 	}
 
@@ -74,11 +64,8 @@ func DeleteAlert(ctx context.Context, req DeleteAlertRequest) (DeleteAlertRespon
 		return DeleteAlertResponse{}, err
 	}
 
-	dbTable := dynamo.Table{
-		TableName: OpenTeeTable,
-		KeyName:   OpenTeeTableKey,
-	}
-	if err := dbTable.DeleteItem(ctx, req.AlertID); err != nil {
+	db := AlertDB()
+	if err := db.Delete(ctx, req.AlertID); err != nil {
 		return DeleteAlertResponse{}, fmt.Errorf("failed to delete alert from DB: %v", err)
 	}
 
