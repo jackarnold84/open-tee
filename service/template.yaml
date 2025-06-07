@@ -21,6 +21,8 @@ Globals:
     Environment:
       Variables:
         ENV: !Ref Environment
+        PASSWORD: !Ref AuthPassword
+        TZ: America/Chicago
 
 Resources:
   OpenTeeApi:
@@ -53,9 +55,6 @@ Resources:
           Properties:
             Method: DELETE
             Path: /opentee/delete-alert/{alertId}
-      Environment:
-        Variables:
-          PASSWORD: !Ref AuthPassword
       Policies:
         - Statement:
             - Sid: DynamoAccess
