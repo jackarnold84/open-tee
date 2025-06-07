@@ -4,22 +4,25 @@ import (
 	"fmt"
 	"math"
 	"opentee/internal/golfnow"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
 )
 
 type TeeTimeSearchRequest struct {
-	Date         string `json:"date" dynamodbav:"date" validate:"required,datetime=2006-01-02"`
-	ZipCode      string `json:"zipCode" dynamodbav:"zipCode" validate:"required,len=5,numeric"`
-	Radius       int    `json:"radius" dynamodbav:"radius" validate:"required,min=1,max=50"`
-	Holes        int    `json:"holes" dynamodbav:"holes" validate:"oneof=0 9 18"`
-	Players      int    `json:"players" dynamodbav:"players" validate:"min=0,max=4"`
-	DealsOnly    bool   `json:"dealsOnly" dynamodbav:"dealsOnly"`
-	PriceMin     int    `json:"priceMin" dynamodbav:"priceMin" validate:"min=0"`
-	PriceMax     int    `json:"priceMax" dynamodbav:"priceMax" validate:"min=0,gtefield=PriceMin"`
-	StartHourMin int    `json:"startHourMin" dynamodbav:"startHourMin" validate:"min=0,max=23"`
-	StartHourMax int    `json:"startHourMax" dynamodbav:"startHourMax" validate:"min=0,max=23,gtefield=StartHourMin"`
+	Date         string   `json:"date" dynamodbav:"date" validate:"required,datetime=2006-01-02"`
+	ZipCode      string   `json:"zipCode" dynamodbav:"zipCode" validate:"required,len=5,numeric"`
+	Radius       int      `json:"radius" dynamodbav:"radius" validate:"required,min=1,max=50"`
+	Holes        int      `json:"holes" dynamodbav:"holes" validate:"oneof=0 9 18"`
+	Players      int      `json:"players" dynamodbav:"players" validate:"min=0,max=4"`
+	DealsOnly    bool     `json:"dealsOnly" dynamodbav:"dealsOnly"`
+	PriceMin     int      `json:"priceMin" dynamodbav:"priceMin" validate:"min=0"`
+	PriceMax     int      `json:"priceMax" dynamodbav:"priceMax" validate:"min=0,gtefield=PriceMin"`
+	StartHourMin int      `json:"startHourMin" dynamodbav:"startHourMin" validate:"min=0,max=23"`
+	StartHourMax int      `json:"startHourMax" dynamodbav:"startHourMax" validate:"min=0,max=23,gtefield=StartHourMin"`
+	RatingMin    float64  `json:"ratingMin" dynamodbav:"ratingMin" validate:"min=0,max=5"`
+	NameContains []string `json:"nameContains" dynamodbav:"nameContains" validate:"omitempty,max=100"`
 }
 
 type TeeTimeSearchResponse struct {
@@ -85,6 +88,13 @@ func TeeTimeSearch(req TeeTimeSearchRequest) (TeeTimeSearchResponse, error) {
 
 	res.Courses = make([]Course, 0, len(gnResp))
 	for _, facility := range gnResp {
+		if facility.AverageRating < req.RatingMin {
+			continue
+		}
+		if len(req.NameContains) > 0 && !nameContains(facility.Name, req.NameContains) {
+			continue
+		}
+
 		course := Course{
 			ID:            facility.ID,
 			Name:          facility.Name,
@@ -129,4 +139,13 @@ func extractTime(datetime string) string {
 		return ""
 	}
 	return t.Format("15:04")
+}
+
+func nameContains(courseName string, terms []string) bool {
+	for _, term := range terms {
+		if strings.Contains(strings.ToLower(courseName), strings.ToLower(term)) {
+			return true
+		}
+	}
+	return false
 }

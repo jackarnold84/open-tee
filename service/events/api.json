@@ -4,5 +4,5 @@
     "headers": {
         "Content-Type": "application/json"
     },
-    "body": "{\"date\":\"2025-06-07\",\"zipCode\":\"60607\",\"radius\":20,\"holes\":18,\"players\":2,\"dealsOnly\":true,\"priceMax\":100,\"startHourMin\":6,\"startHourMax\":18}"
+    "body": "{\"date\":\"2025-06-10\",\"zipCode\":\"60607\",\"radius\":20,\"holes\":18,\"players\":2,\"dealsOnly\":true,\"priceMax\":100,\"startHourMin\":6,\"startHourMax\":18,\"ratingMin\":2.5,\"nameContains\":[]}"
 }
