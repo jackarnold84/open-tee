@@ -11,6 +11,8 @@ import (
 
 const (
 	processLimit = 10
+	sourceEmail  = "praisedformula5@gmail.com"
+	targetEmail  = "jarno.push@yahoo.com"
 )
 
 type ProcessAlertsResponse struct {
@@ -68,11 +70,11 @@ func ProcessAlerts(ctx context.Context) (ProcessAlertsResponse, error) {
 }
 
 func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
-	isFuture, err := isFutureDate(item.TeeTimeSearch.Date)
+	isPast, err := isPastDate(item.TeeTimeSearch.Date)
 	if err != nil {
 		return "ERROR", fmt.Errorf("invalid tee time search date: %w", err)
 	}
-	if isFuture {
+	if isPast {
 		db := AlertDB()
 		if err := db.Delete(ctx, item.AlertID); err != nil {
 			return "ERROR", fmt.Errorf("failed to delete future-dated alert: %w", err)
@@ -120,7 +122,7 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 	if (len(changes.NewCourses) > 0 && item.AlertOptions.NewCourses) ||
 		(len(changes.TeeTimeChanges) > 0 && item.AlertOptions.TeeTimeChanges) ||
 		(len(changes.CostChanges) > 0 && item.AlertOptions.CostChanges) {
-		if err := sendNotification(item, changes); err != nil {
+		if err := sendNotification(ctx, item, changes); err != nil {
 			return "ERROR", fmt.Errorf("notification failure: %w", err)
 		}
 		notified = true
@@ -139,14 +141,21 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 	return "NO_UPDATES", nil
 }
 
-func sendNotification(alert AlertItem, changes SearchChanges) error {
+func sendNotification(ctx context.Context, alert AlertItem, changes SearchChanges) error {
 	emailBody, err := generateEmailBody(alert, changes)
 	if err != nil {
 		return fmt.Errorf("failed to generate email body: %w", err)
 	}
 
-	// TODO: send
-	fmt.Println(emailBody)
+	email := ses.Email{
+		FromAddress: sourceEmail,
+		ToAddress:   targetEmail,
+		Subject:     "OpenTee - Tee Time Alert",
+		Body:        emailBody,
+	}
+	if err := email.Send(ctx); err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
 
 	return nil
 }
@@ -170,10 +179,11 @@ func generateEmailBody(alert AlertItem, changes SearchChanges) (string, error) {
 	return htmlBody, nil
 }
 
-func isFutureDate(dateStr string) (bool, error) {
-	parsed, err := time.Parse("2006-01-02", dateStr)
+func isPastDate(dateStr string) (bool, error) {
+	dateTimeStr := fmt.Sprintf("%s 23:59", dateStr)
+	parsed, err := time.Parse("2006-01-02 15:04", dateTimeStr)
 	if err != nil {
 		return false, err
 	}
-	return parsed.After(time.Now()), nil
+	return parsed.Before(time.Now()), nil
 }
