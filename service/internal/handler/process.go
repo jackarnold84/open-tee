@@ -157,11 +157,11 @@ func generateEmailBody(alert AlertItem, changes SearchChanges) (string, error) {
 		return "", fmt.Errorf("failed to read email template: %w", err)
 	}
 	data := struct {
-		AlertOptions AlertOptions
-		Changes      SearchChanges
+		Alert   AlertItem
+		Changes SearchChanges
 	}{
-		AlertOptions: alert.AlertOptions,
-		Changes:      changes,
+		Alert:   alert,
+		Changes: changes,
 	}
 	htmlBody, err := ses.HtmlTemplate(string(tmplBytes), data)
 	if err != nil {
