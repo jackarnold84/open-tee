@@ -38,7 +38,7 @@ func TestGenerateEmailBody(t *testing.T) {
 		},
 	}
 
-	emailBody, err := generateEmailBody(alertItem, searchChanges)
+	emailBody, err := generateNotificationBody(alertItem, searchChanges)
 	assert.NoError(t, err)
 	assert.NotEmpty(t, emailBody)
 }

@@ -3,7 +3,9 @@ package handler
 import (
 	"context"
 	"embed"
+	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"opentee/common/ses"
 	"time"
@@ -58,6 +60,9 @@ func ProcessAlerts(ctx context.Context) (ProcessAlertsResponse, error) {
 		}
 		if err != nil {
 			result.Error = err.Error()
+			if sendErr := sendErrorNotification(ctx, item, err); sendErr != nil {
+				log.Println("Failed to send error notification:", sendErr)
+			}
 			processErrors++
 		}
 		resp.ProcessResults = append(resp.ProcessResults, result)
@@ -83,16 +88,20 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 	}
 	var changes SearchChanges
 
-	prevResult := item.Result
-	prevCourses := map[int]Course{}
-	for _, course := range prevResult.Courses {
-		prevCourses[course.ID] = course
-	}
-
 	// search latest tee times
 	currResult, err := TeeTimeSearch(item.TeeTimeSearch)
 	if err != nil {
 		return "ERROR", fmt.Errorf("tee time search failed: %w", err)
+	}
+
+	prevResult := item.Result
+	prevCourses := make(map[int]Course, len(prevResult.Courses))
+	currCourses := make(map[int]Course, len(prevResult.Courses))
+	for _, course := range prevResult.Courses {
+		prevCourses[course.ID] = course
+	}
+	for _, course := range currResult.Courses {
+		currCourses[course.ID] = course
 	}
 
 	// check for changes
@@ -114,6 +123,14 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 			changes.CostChanges = append(changes.CostChanges, CourseChange{
 				Prev:    prevCourse,
 				Current: currCourse,
+			})
+		}
+	}
+	for _, prevCourse := range prevResult.Courses {
+		if _, exists := currCourses[prevCourse.ID]; !exists {
+			changes.TeeTimeChanges = append(changes.TeeTimeChanges, CourseChange{
+				Prev:    prevCourse,
+				Current: Course{},
 			})
 		}
 	}
@@ -142,7 +159,7 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 }
 
 func sendNotification(ctx context.Context, alert AlertItem, changes SearchChanges) error {
-	emailBody, err := generateEmailBody(alert, changes)
+	emailBody, err := generateNotificationBody(alert, changes)
 	if err != nil {
 		return fmt.Errorf("failed to generate email body: %w", err)
 	}
@@ -160,7 +177,7 @@ func sendNotification(ctx context.Context, alert AlertItem, changes SearchChange
 	return nil
 }
 
-func generateEmailBody(alert AlertItem, changes SearchChanges) (string, error) {
+func generateNotificationBody(alert AlertItem, changes SearchChanges) (string, error) {
 	tmplBytes, err := alertEmailTmplFS.ReadFile("alert_email.tmpl.html")
 	if err != nil {
 		return "", fmt.Errorf("failed to read email template: %w", err)
@@ -177,6 +194,24 @@ func generateEmailBody(alert AlertItem, changes SearchChanges) (string, error) {
 		return "", fmt.Errorf("failed to generate email body: %w", err)
 	}
 	return htmlBody, nil
+}
+
+func sendErrorNotification(ctx context.Context, alert AlertItem, err error) error {
+	alertData, _ := json.MarshalIndent(alert, "", "  ")
+	emailBody := fmt.Sprintf(
+		"An error occurred while processing alert %s\nError: %s\nAlert Data:\n%s",
+		alert.AlertID, err.Error(), alertData,
+	)
+	email := ses.Email{
+		FromAddress: sourceEmail,
+		ToAddress:   targetEmail,
+		Subject:     "OpenTee - Alert Processing Error",
+		Body:        emailBody,
+	}
+	if err := email.Send(ctx); err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+	return nil
 }
 
 func isPastDate(dateStr string) (bool, error) {

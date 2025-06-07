@@ -88,8 +88,8 @@
     <h3>Tee Time Changes</h3>
     {{range .Changes.TeeTimeChanges}}
     <div class="section">
-        <div class="course-title">{{.Current.Name}}</div>
-        <div class="course-location">{{.Current.Location}}</div>
+        <div class="course-title">{{.Prev.Name}}</div>
+        <div class="course-location">{{.Prev.Location}}</div>
         <div class="course-detail">{{.Current.TeeTimes}} tee times ({{.Current.StartTimeMin}} - {{.Current.StartTimeMax}})</div>
         <div class="course-detail">${{printf "%.2f" .Current.PriceMin}}</div>
         <div class="course-detail"><span class="label">Change:</span> Available tee times changed from {{.Prev.TeeTimes}} to {{.Current.TeeTimes}}</div>
