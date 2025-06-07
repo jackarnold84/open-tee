@@ -77,15 +77,15 @@ Resources:
     Properties:
       FunctionName: OpenTeeScheduler
       CodeUri: cmd/scheduler-lambda
-      Timeout: 5
+      Timeout: 10
       MemorySize: 128
       Events:
         OpenTeeUpdate:
           Type: Schedule
           Properties:
             Name: OpenTeeUpdate
-            Schedule: rate(5 minutes)
-            Enabled: false
+            Schedule: rate(2 hours)
+            Enabled: true
       Policies:
         - Statement:
             - Sid: DynamoAccess
