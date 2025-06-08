@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -60,9 +59,7 @@ func ProcessAlerts(ctx context.Context) (ProcessAlertsResponse, error) {
 		}
 		if err != nil {
 			result.Error = err.Error()
-			if sendErr := sendErrorNotification(ctx, item, err); sendErr != nil {
-				log.Println("Failed to send error notification:", sendErr)
-			}
+			log.Printf("Error processing alert %s: %v", item.AlertID, err)
 			processErrors++
 		}
 		resp.ProcessResults = append(resp.ProcessResults, result)
@@ -196,12 +193,8 @@ func generateNotificationBody(alert AlertItem, changes SearchChanges) (string, e
 	return htmlBody, nil
 }
 
-func sendErrorNotification(ctx context.Context, alert AlertItem, err error) error {
-	alertData, _ := json.MarshalIndent(alert, "", "  ")
-	emailBody := fmt.Sprintf(
-		"An error occurred while processing alert %s\nError: %s\nAlert Data:\n%s",
-		alert.AlertID, err.Error(), alertData,
-	)
+func SendErrorNotification(ctx context.Context, message string) error {
+	emailBody := fmt.Sprintf("An error occurred while processing alerts: %s", message)
 	email := ses.Email{
 		FromAddress: sourceEmail,
 		ToAddress:   targetEmail,

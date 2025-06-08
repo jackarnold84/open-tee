@@ -25,6 +25,7 @@ clean:
 	go clean -testcache
 
 sam: build
+	sam validate --lint
 	sam build
 
 invoke-api: sam
@@ -37,4 +38,4 @@ serve-local: sam
 	ENV=local sam local start-lambda --env-vars $(ENVIRON)
 
 deploy: sam
-	sam deploy --guided
+	sam deploy

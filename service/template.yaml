@@ -60,15 +60,17 @@ Resources:
             - Sid: DynamoAccess
               Effect: Allow
               Action:
-                - "dynamodb:PutItem"
-                - "dynamodb:DeleteItem"
+                - dynamodb:PutItem
+                - dynamodb:DeleteItem
               Resource: !GetAtt OpenTeeTable.Arn
             - Sid: EmailAccess
               Effect: Allow
               Action:
-                - "ses:SendEmail"
+                - ses:SendEmail
                 - ses:SendRawEmail
-              Resource: !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/praisedformula5@gmail.com
+              Resource:
+                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/praisedformula5@gmail.com
+                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/jarno.push@yahoo.com
 
   OpenTeeScheduler:
     Type: AWS::Serverless::Function
@@ -84,21 +86,25 @@ Resources:
           Type: Schedule
           Properties:
             Name: OpenTeeUpdate
-            Schedule: rate(2 hours)
+            Schedule: rate(1 hour)
             Enabled: true
       Policies:
         - Statement:
             - Sid: DynamoAccess
               Effect: Allow
               Action:
-                - "dynamodb:Scan"
+                - dynamodb:Scan
+                - dynamodb:PutItem
+                - dynamodb:DeleteItem
               Resource: !GetAtt OpenTeeTable.Arn
             - Sid: EmailAccess
               Effect: Allow
               Action:
-                - "ses:SendEmail"
+                - ses:SendEmail
                 - ses:SendRawEmail
-              Resource: !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/praisedformula5@gmail.com
+              Resource:
+                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/praisedformula5@gmail.com
+                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/jarno.push@yahoo.com
 
   OpenTeeTable:
     Type: AWS::Serverless::SimpleTable
