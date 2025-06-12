@@ -1,0 +1,7 @@
+{
+    "id": "1234",
+    "detail-type": "Scheduler Event",
+    "detail": {
+        "message": "hello world"
+    }
+}

@@ -1,0 +1,132 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: OpenTee stack
+
+Parameters:
+  Environment:
+    Type: String
+    Description: specifies environment stage (local, dev, prod)
+    Default: dev
+  AuthPassword:
+    Type: String
+    Description: used as basic authentication password for lambda APIs
+    Default: admin
+
+Globals:
+  Function:
+    Handler: bootstrap
+    Runtime: provided.al2023
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        ENV: !Ref Environment
+        PASSWORD: !Ref AuthPassword
+        TZ: America/Chicago
+
+Resources:
+  OpenTeeApi:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      FunctionName: OpenTeeApi
+      CodeUri: cmd/api-lambda
+      Timeout: 5
+      MemorySize: 128
+      Events:
+        Health:
+          Type: Api
+          Properties:
+            Method: GET
+            Path: /opentee/health
+        TeeTimeSearch:
+          Type: Api
+          Properties:
+            Method: POST
+            Path: /opentee/tee-time-search
+        CreateAlert:
+          Type: Api
+          Properties:
+            Method: POST
+            Path: /opentee/create-alert
+        DeleteAlert:
+          Type: Api
+          Properties:
+            Method: DELETE
+            Path: /opentee/delete-alert/{alertId}
+      Policies:
+        - Statement:
+            - Sid: DynamoAccess
+              Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:DeleteItem
+              Resource: !GetAtt OpenTeeTable.Arn
+            - Sid: EmailAccess
+              Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource:
+                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/praisedformula5@gmail.com
+                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/jarno.push@yahoo.com
+
+  OpenTeeScheduler:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      FunctionName: OpenTeeScheduler
+      CodeUri: cmd/scheduler-lambda
+      Timeout: 10
+      MemorySize: 128
+      Events:
+        OpenTeeUpdate:
+          Type: Schedule
+          Properties:
+            Name: OpenTeeUpdate
+            Schedule: rate(1 hour)
+            Enabled: true
+      Policies:
+        - Statement:
+            - Sid: DynamoAccess
+              Effect: Allow
+              Action:
+                - dynamodb:Scan
+                - dynamodb:PutItem
+                - dynamodb:DeleteItem
+              Resource: !GetAtt OpenTeeTable.Arn
+            - Sid: EmailAccess
+              Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource:
+                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/praisedformula5@gmail.com
+                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/jarno.push@yahoo.com
+
+  OpenTeeTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: OpenTeeTable
+      PrimaryKey:
+        Name: key
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+Outputs:
+  OpenTeeApiFunctionArn:
+    Description: "ARN of the OpenTeeApi Lambda function"
+    Value: !GetAtt OpenTeeApi.Arn
+  OpenTeeSchedulerFunctionArn:
+    Description: "ARN of the OpenTeeScheduler Lambda function"
+    Value: !GetAtt OpenTeeScheduler.Arn
+  OpenTeeTableArn:
+    Description: "ARN of the OpenTee DynamoDB table"
+    Value: !GetAtt OpenTeeTable.Arn
+  OpenTeeApiEndpoint:
+    Description: "API Gateway endpoint for OpenTeeApi"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/opentee/"

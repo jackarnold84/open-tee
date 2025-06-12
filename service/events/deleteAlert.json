@@ -1,0 +1,10 @@
+{
+    "resource": "/opentee/delete-alert/{alertId}",
+    "httpMethod": "DELETE",
+    "headers": {
+        "Content-Type": "application/json"
+    },
+    "pathParameters": {
+        "alertId": "12345"
+    }
+}

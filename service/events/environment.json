@@ -1,0 +1,6 @@
+{
+    "Parameters": {
+        "ENV": "local",
+        "PASSWORD": "admin"
+    }
+}

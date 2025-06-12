@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenTee Alert</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0 8px;
+            background: #f9f9f9;
+        }
+
+        .section {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+            margin: 16px 0;
+            padding: 16px;
+        }
+
+        .course-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .course-location {
+            color: #666;
+            font-size: 0.98em;
+        }
+
+        .course-detail {
+            margin-bottom: 2px;
+        }
+
+        .label {
+            font-weight: bold;
+        }
+
+        .search-summary {
+            margin-bottom: 18px;
+        }
+
+        @media (max-width: 600px) {
+            .section {
+                padding: 10px;
+            }
+
+            body {
+                padding: 0 2px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h2>OpenTee Alert</h2>
+
+    <div class="section search-summary">
+        <div><span class="label">Tee Time Search</span></div>
+        <div><span class="label">Date:</span> {{.Alert.TeeTimeSearch.Date}}</div>
+        <div><span class="label">Zip Code:</span> {{.Alert.TeeTimeSearch.ZipCode}} ({{.Alert.TeeTimeSearch.Radius}} mi radius)</div>
+        <div><span class="label">Format:</span> {{.Alert.TeeTimeSearch.Holes}} holes, {{.Alert.TeeTimeSearch.Players}} players</div>
+        <div><span class="label">Deals Only:</span> {{if .Alert.TeeTimeSearch.DealsOnly}}Yes{{else}}No{{end}}</div>
+        <div><span class="label">Price Range:</span> ${{.Alert.TeeTimeSearch.PriceMin}} - ${{.Alert.TeeTimeSearch.PriceMax}}</div>
+        <div><span class="label">Time Range:</span> {{.Alert.TeeTimeSearch.StartHourMin}}:00 - {{.Alert.TeeTimeSearch.StartHourMax}}:00</div>
+    </div>
+
+    {{if .Alert.AlertOptions.NewCourses}}
+    {{if .Changes.NewCourses}}
+    <h3>New Courses</h3>
+    {{range .Changes.NewCourses}}
+    <div class="section">
+        <div class="course-title">{{.Name}}</div>
+        <div class="course-location">{{.Location}}</div>
+        <div class="course-detail">{{.TeeTimes}} tee times ({{.StartTimeMin}} - {{.StartTimeMax}})</div>
+        <div class="course-detail">${{printf "%.2f" .PriceMin}}</div>
+    </div>
+    {{end}}
+    {{end}}
+    {{end}}
+
+    {{if .Alert.AlertOptions.TeeTimeChanges}}
+    {{if .Changes.TeeTimeChanges}}
+    <h3>Tee Time Changes</h3>
+    {{range .Changes.TeeTimeChanges}}
+    <div class="section">
+        <div class="course-title">{{.Prev.Name}}</div>
+        <div class="course-location">{{.Prev.Location}}</div>
+        <div class="course-detail">{{.Current.TeeTimes}} tee times ({{.Current.StartTimeMin}} - {{.Current.StartTimeMax}})</div>
+        <div class="course-detail">${{printf "%.2f" .Current.PriceMin}}</div>
+        <div class="course-detail"><span class="label">Change:</span> Available tee times changed from {{.Prev.TeeTimes}} to {{.Current.TeeTimes}}</div>
+    </div>
+    {{end}}
+    {{end}}
+    {{end}}
+
+    {{if .Alert.AlertOptions.CostChanges}}
+    {{if .Changes.CostChanges}}
+    <h3>Cost Changes</h3>
+    {{range .Changes.CostChanges}}
+    <div class="section">
+        <div class="course-title">{{.Current.Name}}</div>
+        <div class="course-location">{{.Current.Location}}</div>
+        <div class="course-detail">{{.Current.TeeTimes}} tee times ({{.Current.StartTimeMin}} - {{.Current.StartTimeMax}})</div>
+        <div class="course-detail">${{printf "%.2f" .Current.PriceMin}}</div>
+        <div class="course-detail"><span class="label">Change:</span> Price changed from ${{printf "%.2f" .Prev.PriceMin}} to ${{printf "%.2f" .Current.PriceMin}}</div>
+    </div>
+    {{end}}
+    {{end}}
+    {{end}}
+</body>
+
+</html>
