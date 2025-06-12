@@ -1,8 +1,8 @@
 :root {
-  --primary-color: #6b37bf;
-  --primary-hover-color: #8b5ccc;
+  --primary-color: #768f13;
+  --primary-hover-color: #6b8112;
   --header-text-color: white;
-  --header-text-hover-color: #e9d9ff;
+  --header-text-hover-color: #e3f3a5;
 }
 
 .header {

@@ -24,4 +24,4 @@ const NotFoundPage = () => {
 
 export default NotFoundPage
 
-export const Head = () => <title>Not Found</title>
+export const Head = () => <title>OpenTee - Not Found</title>

@@ -2,10 +2,10 @@ import type { GatsbyConfig } from "gatsby";
 
 const config: GatsbyConfig = {
   siteMetadata: {
-    title: `My Gatsby Site`,
-    siteUrl: `https://jackarnold84.github.io/gatsby-template/`
+    title: `Open Tee`,
+    siteUrl: `https://jackarnold84.github.io/open-tee/`
   },
-  pathPrefix: "/gatsby-template",
+  pathPrefix: "/open-tee",
   plugins: [
     {
       resolve: 'gatsby-plugin-antd',
@@ -19,7 +19,7 @@ const config: GatsbyConfig = {
         lessOptions: {
           javascriptEnabled: true,
           modifyVars: {
-            '@primary-color': '#6b37bf',
+            '@primary-color': '#768f13',
             '@font-size-base': '16px',
             '@font-family': "'Source Sans Pro', sans-serif",
             '@border-radius-base': '6px',
@@ -41,11 +41,11 @@ const config: GatsbyConfig = {
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
-        name: "GatsbyJS",
-        short_name: "GatsbyJS",
+        name: "OpenTee",
+        short_name: "OpenTee",
         start_url: "/",
-        background_color: "#6b37bf",
-        theme_color: "#6b37bf",
+        background_color: "#768f13",
+        theme_color: "#768f13",
         display: "standalone",
         icon: "src/images/icon.png",
       },
