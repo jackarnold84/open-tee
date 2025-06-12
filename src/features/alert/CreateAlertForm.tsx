@@ -86,10 +86,9 @@ export const CreateAlertForm: React.FC<CreateAlertFormProps> = ({ onSubmit, init
       ...values,
       nameContains,
       date: values.date ? values.date.format("YYYY-MM-DD") : undefined,
-      startHourMin: values.startHourRange ? values.startHourRange[0] : 4,
-      startHourMax: values.startHourRange ? values.startHourRange[1] : 22,
+      startHourMin: Array.isArray(values.startHourRange) ? values.startHourRange[0] : 4,
+      startHourMax: Array.isArray(values.startHourRange) ? values.startHourRange[1] : 22,
     }
-    delete formatted.startHourRange
     onSubmit(formatted as CreateAlertFormValues)
   }
 
