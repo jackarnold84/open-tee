@@ -1,0 +1,38 @@
+# nextjs
+node_modules/
+.cache/
+public
+package-lock.json
+src/gatsby-types.d.ts
+/coverage
+*.tsbuildinfo
+
+# python
+__pycache__/
+.env
+.venv
+.coverage
+*.cover
+.DS_Store
+*.egg-info/
+.mypy_cache/
+
+# aws
+.aws-sam/
+samconfig.toml
+
+# go
+bin/
+*.exe
+*.exe~
+*.out
+*.test
+*.log
+vendor/
+
+# dev
+*.pem
+.env*
+.vscode/
+.dev/
+.github/
