@@ -1,5 +1,4 @@
 export const palette = {
-  primary: '#6b37bf',
-  primaryHover: '#8b5ccc',
-  purple: '#6b37bf',
+  primary: '#768f13',
+  primaryHover: '#6b8112',
 }

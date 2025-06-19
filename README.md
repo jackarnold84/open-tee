@@ -1,29 +1,28 @@
-# Gatsby Template
+# OpenTee
 
-Template for gatsby site.
+Golf tee time alert manager
 
-See `package.json` for develpment commands
-- `npm run start`
-- `npm run build`
-- `npm run serve`
-- `npm run deploy` (to GitHub pages)
+https://jackarnold84.github.io/open-tee/
 
-## Update List
+## Develop
 
-Update the following to customize your app
+### UI
+- requirements
+  - Node.js and npm
+  - Gatsby CLI
+- develop locally
+  - `npm start`
+- build locally
+  - `npm build`
+- serve on local network
+  - `npm run serve`
+- deploy to GitHub Pages
+  - `npm run deploy`
+  - see [gatsby-config.js](gatsby-config.js) for options
 
-### [`package.json`](/package.json)
-- project metadata
-- delete any unnecessary dependencies
-
-### [`gatsby-config.js`](/gatsby-config.js)
-- metadata
-- site url + path prefix (to match GitHub repo) for deployment
-- theme + background color
-- icon path
-
-### [`Layout.js`](/src/components/Layout.js)
-- Header, footer
-- Navigation menu
-- Body max width
-- Antd theme ([ConfigProvider](https://ant.design/docs/react/customize-theme))
+### Service
+Located in [service/](service/) directory
+- requirements
+  - Go (Golang)
+  - AWS CLI + AWS-SAM CLI
+- use [Makefile](service/Makefile) to build, test, and deploy to AWS
