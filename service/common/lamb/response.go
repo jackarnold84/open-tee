@@ -13,11 +13,9 @@ func buildResponse(statusCode int, payload any) events.APIGatewayProxyResponse {
 		Body:       string(bodyBytes),
 		Headers: map[string]string{
 			"Content-Type":                 "application/json",
-			"Access-Control-Allow-Headers": "application/json",
 			"Access-Control-Allow-Origin":  "*",
-		},
-		MultiValueHeaders: map[string][]string{
-			"Access-Control-Allow-Methods": {"GET", "POST", "DELETE"},
+			"Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+			"Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
 		},
 	}
 }
@@ -31,7 +29,7 @@ func Error(err error, msg ...string) events.APIGatewayProxyResponse {
 	if err != nil {
 		errMsg = err.Error()
 	}
-	res := map[string]any{"status": "FAILIRE", "error": errMsg}
+	res := map[string]any{"status": "FAILURE", "error": errMsg}
 	if len(msg) > 0 {
 		res["message"] = msg[0]
 	}

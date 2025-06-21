@@ -44,6 +44,27 @@
             margin-bottom: 18px;
         }
 
+        .alert-links {
+            margin: 32px 0 0 0;
+            text-align: center;
+        }
+
+        .alert-link-create {
+            display: inline-block;
+            margin-right: 32px;
+            text-decoration: none;
+            color: #768f13;
+            font-weight: bold;
+        }
+
+        .alert-link-delete {
+            display: inline-block;
+            margin-left: 32px;
+            text-decoration: none;
+            color: #d32f2f;
+            font-weight: bold;
+        }
+
         @media (max-width: 600px) {
             .section {
                 padding: 10px;
@@ -62,11 +83,19 @@
     <div class="section search-summary">
         <div><span class="label">Tee Time Search</span></div>
         <div><span class="label">Date:</span> {{.Alert.TeeTimeSearch.Date}}</div>
-        <div><span class="label">Zip Code:</span> {{.Alert.TeeTimeSearch.ZipCode}} ({{.Alert.TeeTimeSearch.Radius}} mi radius)</div>
-        <div><span class="label">Format:</span> {{.Alert.TeeTimeSearch.Holes}} holes, {{.Alert.TeeTimeSearch.Players}} players</div>
+        <div><span class="label">Zip Code:</span> {{.Alert.TeeTimeSearch.ZipCode}} ({{.Alert.TeeTimeSearch.Radius}} mi
+            radius)
+        </div>
+        <div><span class="label">Format:</span> {{.Alert.TeeTimeSearch.Holes}} holes, {{.Alert.TeeTimeSearch.Players}}
+            players</div>
         <div><span class="label">Deals Only:</span> {{if .Alert.TeeTimeSearch.DealsOnly}}Yes{{else}}No{{end}}</div>
-        <div><span class="label">Price Range:</span> ${{.Alert.TeeTimeSearch.PriceMin}} - ${{.Alert.TeeTimeSearch.PriceMax}}</div>
-        <div><span class="label">Time Range:</span> {{.Alert.TeeTimeSearch.StartHourMin}}:00 - {{.Alert.TeeTimeSearch.StartHourMax}}:00</div>
+        <div><span class="label">Price Range:</span> ${{.Alert.TeeTimeSearch.PriceMin}} -
+            ${{.Alert.TeeTimeSearch.PriceMax}}
+        </div>
+        <div><span class="label">Time Range:</span> {{.Alert.TeeTimeSearch.StartHourMin}}:00 -
+            {{.Alert.TeeTimeSearch.StartHourMax}}:00
+        </div>
+        <div><span class="label">ID:</span> {{.Alert.AlertID}}</div>
     </div>
 
     {{if .Alert.AlertOptions.NewCourses}}
@@ -90,9 +119,12 @@
     <div class="section">
         <div class="course-title">{{.Prev.Name}}</div>
         <div class="course-location">{{.Prev.Location}}</div>
-        <div class="course-detail">{{.Current.TeeTimes}} tee times ({{.Current.StartTimeMin}} - {{.Current.StartTimeMax}})</div>
+        <div class="course-detail">{{.Current.TeeTimes}} tee times ({{.Current.StartTimeMin}} -
+            {{.Current.StartTimeMax}})</div>
         <div class="course-detail">${{printf "%.2f" .Current.PriceMin}}</div>
-        <div class="course-detail"><span class="label">Change:</span> Available tee times changed from {{.Prev.TeeTimes}} to {{.Current.TeeTimes}}</div>
+        <div class="course-detail"><span class="label">Change:</span> Available tee times changed from
+            {{.Prev.TeeTimes}} to
+            {{.Current.TeeTimes}}</div>
     </div>
     {{end}}
     {{end}}
@@ -105,13 +137,21 @@
     <div class="section">
         <div class="course-title">{{.Current.Name}}</div>
         <div class="course-location">{{.Current.Location}}</div>
-        <div class="course-detail">{{.Current.TeeTimes}} tee times ({{.Current.StartTimeMin}} - {{.Current.StartTimeMax}})</div>
+        <div class="course-detail">{{.Current.TeeTimes}} tee times ({{.Current.StartTimeMin}} -
+            {{.Current.StartTimeMax}})</div>
         <div class="course-detail">${{printf "%.2f" .Current.PriceMin}}</div>
-        <div class="course-detail"><span class="label">Change:</span> Price changed from ${{printf "%.2f" .Prev.PriceMin}} to ${{printf "%.2f" .Current.PriceMin}}</div>
+        <div class="course-detail"><span class="label">Change:</span> Price changed from ${{printf "%.2f"
+            .Prev.PriceMin}} to
+            ${{printf "%.2f" .Current.PriceMin}}</div>
     </div>
     {{end}}
     {{end}}
     {{end}}
+    <div class="alert-links">
+        <a href="https://jackarnold84.github.io/open-tee/create/" class="alert-link-create">Create New Alert</a>
+        <a href="https://jackarnold84.github.io/open-tee/delete?alertId={{.Alert.AlertID}}"
+            class="alert-link-delete">Delete Alert</a>
+    </div>
 </body>
 
 </html>
