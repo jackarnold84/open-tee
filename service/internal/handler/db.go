@@ -11,10 +11,11 @@ const (
 )
 
 type AlertItem struct {
-	AlertID       string                `dynamodbav:"key" json:"alertId"`
-	AlertOptions  AlertOptions          `dynamodbav:"alertOptions" json:"alertOptions"`
-	TeeTimeSearch TeeTimeSearchRequest  `dynamodbav:"teeTimeSearch" json:"teeTimeSearch"`
-	Result        TeeTimeSearchResponse `dynamodbav:"result" json:"result"`
+	AlertID          string                `dynamodbav:"key" json:"alertId"`
+	AlertOptions     AlertOptions          `dynamodbav:"alertOptions" json:"alertOptions"`
+	TeeTimeSearch    TeeTimeSearchRequest  `dynamodbav:"teeTimeSearch" json:"teeTimeSearch"`
+	Result           TeeTimeSearchResponse `dynamodbav:"result" json:"result"`
+	NewCourseAlerted []int                 `dynamodbav:"newCourseAlerted" json:"newCourseAlerted"`
 }
 
 type alertDB struct {

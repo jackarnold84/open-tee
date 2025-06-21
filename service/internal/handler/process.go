@@ -132,6 +132,19 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 		}
 	}
 
+	// only alert for new courses not already alerted
+	newCoursesToAlert := make([]Course, 0, len(changes.NewCourses))
+	alreadyAlertedSet := make(map[int]bool, len(item.NewCourseAlerted))
+	for _, id := range item.NewCourseAlerted {
+		alreadyAlertedSet[id] = true
+	}
+	for _, course := range changes.NewCourses {
+		if !alreadyAlertedSet[course.ID] {
+			newCoursesToAlert = append(newCoursesToAlert, course)
+		}
+	}
+	changes.NewCourses = newCoursesToAlert
+
 	notified := false
 	if (len(changes.NewCourses) > 0 && item.AlertOptions.NewCourses) ||
 		(len(changes.TeeTimeChanges) > 0 && item.AlertOptions.TeeTimeChanges) ||
@@ -140,6 +153,13 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 			return "ERROR", fmt.Errorf("notification failure: %w", err)
 		}
 		notified = true
+
+		// update NewCourseAlerted
+		for _, course := range changes.NewCourses {
+			if _, included := alreadyAlertedSet[course.ID]; !included {
+				item.NewCourseAlerted = append(item.NewCourseAlerted, course.ID)
+			}
+		}
 	}
 
 	// update alert item
