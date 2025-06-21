@@ -12,6 +12,8 @@ import (
 
 func lambdaHandler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	switch request.HTTPMethod {
+	case "OPTIONS":
+		return lamb.Success(map[string]string{"status": "ok"}), nil
 	case "GET":
 		switch request.Resource {
 		case "/opentee/health":

@@ -45,15 +45,30 @@ Resources:
           Properties:
             Method: POST
             Path: /opentee/tee-time-search
+        TeeTimeSearchOptions:
+          Type: Api
+          Properties:
+            Method: OPTIONS
+            Path: /opentee/tee-time-search
         CreateAlert:
           Type: Api
           Properties:
             Method: POST
             Path: /opentee/create-alert
+        CreateAlertOptions:
+          Type: Api
+          Properties:
+            Method: OPTIONS
+            Path: /opentee/create-alert
         DeleteAlert:
           Type: Api
           Properties:
             Method: DELETE
+            Path: /opentee/delete-alert/{alertId}
+        DeleteAlertOptions:
+          Type: Api
+          Properties:
+            Method: OPTIONS
             Path: /opentee/delete-alert/{alertId}
       Policies:
         - Statement:
