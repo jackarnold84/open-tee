@@ -3,9 +3,8 @@ import type { GatsbyConfig } from "gatsby";
 const config: GatsbyConfig = {
   siteMetadata: {
     title: `Open Tee`,
-    siteUrl: `https://jackarnold84.github.io/open-tee/`
+    siteUrl: `https://opentee.jarno.site`
   },
-  pathPrefix: "/open-tee",
   plugins: [
     {
       resolve: 'gatsby-plugin-antd',

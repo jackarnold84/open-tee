@@ -101,7 +101,7 @@ Resources:
           Type: Schedule
           Properties:
             Name: OpenTeeUpdate
-            Schedule: rate(1 hour)
+            Schedule: rate(11 minutes)
             Enabled: true
       Policies:
         - Statement:
