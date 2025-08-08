@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"html/template"
 	"log"
 	"math"
 	"opentee/common/ses"
@@ -206,7 +207,27 @@ func generateNotificationBody(alert AlertItem, changes SearchChanges) (string, e
 		Alert:   alert,
 		Changes: changes,
 	}
-	htmlBody, err := ses.HtmlTemplate(string(tmplBytes), data)
+
+	funcs := template.FuncMap{
+		"ampm": func(s string) string {
+			if s == "" {
+				return ""
+			}
+			t, err := time.Parse("15:04", s)
+			if err != nil {
+				return s
+			}
+			return t.Format("3:04pm")
+		},
+		"hourAmpm": func(h int) string {
+			if h < 0 || h > 23 {
+				return ""
+			}
+			return time.Date(2000, 1, 1, h, 0, 0, 0, time.UTC).Format("3:04pm")
+		},
+	}
+
+	htmlBody, err := ses.HtmlTemplate(string(tmplBytes), data, funcs)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate email body: %w", err)
 	}

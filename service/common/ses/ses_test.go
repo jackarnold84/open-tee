@@ -35,7 +35,7 @@ func TestHtmlTemplate(t *testing.T) {
 		Fruits:  []string{"apple", "banana", "pear"},
 	}
 
-	res, err := HtmlTemplate(pageTemplate, data)
+	res, err := HtmlTemplate(pageTemplate, data, nil)
 	assert.NoError(t, err)
 	assert.Contains(t, res, "<h1>Test Page</h1>")
 	assert.Contains(t, res, "<li>apple</li>")

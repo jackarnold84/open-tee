@@ -54,8 +54,12 @@ func (e Email) Send(ctx context.Context) error {
 	return err
 }
 
-func HtmlTemplate(tmpl string, data any) (string, error) {
-	t, err := template.New("").Parse(tmpl)
+func HtmlTemplate(tmpl string, data any, funcs template.FuncMap) (string, error) {
+	t := template.New("")
+	if funcs != nil {
+		t = t.Funcs(funcs)
+	}
+	t, err := t.Parse(tmpl)
 	if err != nil {
 		return "", err
 	}
