@@ -105,10 +105,10 @@ export const CreateAlertForm: React.FC<CreateAlertFormProps> = ({ onSubmit, init
         dealsOnly: false,
         priceMin: 0,
         priceMax: 500,
-        startHourMin: 4,
-        startHourMax: 22,
-        startHourRange: [4, 22],
-        ratingMin: 0,
+        startHourMin: 6,
+        startHourMax: 18,
+        startHourRange: [6, 18],
+        ratingMin: 1,
         nameContains: [],
         ...initialValues,
         date: initialValues?.date ? moment(initialValues.date) : undefined,
@@ -200,10 +200,12 @@ export const CreateAlertForm: React.FC<CreateAlertFormProps> = ({ onSubmit, init
       >
         <InputNumber min={0} style={{ width: "100%" }} addonBefore="$" />
       </Form.Item>
-      <Form.Item name="dealsOnly" style={{ marginBottom: 24 }}>
+      <Form.Item style={{ marginBottom: 24 }}>
         <DealsOnlyRow>
           <span>Deals Only</span>
-          <Switch checked={form.getFieldValue("dealsOnly")} onChange={checked => form.setFieldsValue({ dealsOnly: checked })} />
+          <Form.Item name="dealsOnly" valuePropName="checked" noStyle>
+            <Switch />
+          </Form.Item>
         </DealsOnlyRow>
       </Form.Item>
       <Form.Item
