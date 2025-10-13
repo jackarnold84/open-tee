@@ -41,6 +41,12 @@ func lambdaHandler(ctx context.Context, request events.APIGatewayProxyRequest) (
 				return lamb.Error(err, "create alert error"), nil
 			}
 			return lamb.Success(res), nil
+		case "/opentee/account":
+			account, err := handler.Authenticate(request)
+			if err != nil {
+				return lamb.Unauthorized(err), nil
+			}
+			return lamb.Success(account), nil
 		}
 	case "DELETE":
 		switch request.Resource {

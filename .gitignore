@@ -36,3 +36,6 @@ vendor/
 .vscode/
 .dev/
 .github/
+
+# credentials
+service/internal/env/accounts.json

@@ -7,10 +7,6 @@ Parameters:
     Type: String
     Description: specifies environment stage (local, dev, prod)
     Default: dev
-  AuthPassword:
-    Type: String
-    Description: used as basic authentication password for lambda APIs
-    Default: admin
 
 Globals:
   Function:
@@ -21,7 +17,6 @@ Globals:
     Environment:
       Variables:
         ENV: !Ref Environment
-        PASSWORD: !Ref AuthPassword
         TZ: America/Chicago
 
 Resources:
@@ -70,6 +65,16 @@ Resources:
           Properties:
             Method: OPTIONS
             Path: /opentee/delete-alert/{alertId}
+        Account:
+          Type: Api
+          Properties:
+            Method: POST
+            Path: /opentee/account
+        AccountOptions:
+          Type: Api
+          Properties:
+            Method: OPTIONS
+            Path: /opentee/account
       Policies:
         - Statement:
             - Sid: DynamoAccess
