@@ -37,5 +37,8 @@ invoke-scheduler: sam
 serve-local: sam
 	ENV=local sam local start-lambda --env-vars $(ENVIRON)
 
+serve-api: sam
+	sam local start-api --warm-containers EAGER --env-vars $(ENVIRON)
+
 deploy: sam
 	sam deploy

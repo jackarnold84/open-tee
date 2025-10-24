@@ -2,13 +2,14 @@ import * as React from "react"
 import styled from "styled-components"
 import useSWRMutation from "swr/mutation"
 import Container from "../../components/Container"
+import { API_BASE } from "../../config/env"
 import CreateAlertError from "./CreateAlertError"
 import { CreateAlertForm, CreateAlertFormValues } from "./CreateAlertForm"
 import CreateAlertSuccess from "./CreateAlertSuccess"
 import { SearchResults } from "./SearchResults"
 
-const SEARCH_API_URL = "https://rwz8s6f288.execute-api.us-east-2.amazonaws.com/Prod/opentee/tee-time-search"
-const CREATE_ALERT_API_URL = "https://rwz8s6f288.execute-api.us-east-2.amazonaws.com/Prod/opentee/create-alert"
+const SEARCH_API_URL = `${API_BASE}/opentee/tee-time-search`
+const CREATE_ALERT_API_URL = `${API_BASE}/opentee/create-alert`
 
 async function searchTeeTimes(url: string, { arg }: { arg: CreateAlertFormValues }) {
   const response = await fetch(url, {
