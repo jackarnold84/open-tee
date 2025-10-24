@@ -184,7 +184,7 @@ func sendNotification(ctx context.Context, alert AlertItem, changes SearchChange
 
 	email := ses.Email{
 		FromAddress: sourceEmail,
-		ToAddress:   targetEmail,
+		ToAddress:   alert.AlertEmail,
 		Subject:     "OpenTee - Tee Time Alert",
 		Body:        emailBody,
 	}
