@@ -21,6 +21,7 @@ interface ResultsProps {
     teeTimeChanges: boolean;
     costChanges: boolean;
   }) => void
+  processing?: boolean
 }
 
 const ResultsContainer = styled.div`
@@ -133,7 +134,7 @@ function formatTime(time: string) {
   return `${hour}${min !== 0 ? ":" + minStr : ""}${ampm}`;
 }
 
-export const SearchResults: React.FC<ResultsProps> = ({ courses, onBack, onCreateAlert }) => {
+export const SearchResults: React.FC<ResultsProps> = ({ courses, onBack, onCreateAlert, processing }) => {
   const [alertOptions, setAlertOptions] = React.useState({
     newCourses: false,
     teeTimeChanges: false,
@@ -210,7 +211,7 @@ export const SearchResults: React.FC<ResultsProps> = ({ courses, onBack, onCreat
         {optionsError && <ErrorMsg>{optionsError}</ErrorMsg>}
       </AlertOptionsContainer>
       <Button onClick={onBack} style={{ marginTop: 16, marginRight: 8 }}>Back to Search</Button>
-      <Button type="primary" onClick={handleCreateClick} style={{ marginTop: 16 }}>Create Alert</Button>
+      <Button type="primary" onClick={handleCreateClick} style={{ marginTop: 16 }} loading={processing}>Create Alert</Button>
     </ResultsContainer>
   )
 }

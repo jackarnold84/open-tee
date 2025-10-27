@@ -16,9 +16,6 @@ const ErrorMsg = styled.div`
   color: red;
   margin-bottom: 16px;
 `
-const LoadingMsg = styled.div`
-  margin-top: 16px;
-`
 
 async function searchTeeTimes(url: string, { arg }: { arg: CreateAlertFormValues }) {
   const response = await fetch(url, {
@@ -121,15 +118,13 @@ const Create = () => {
       ) : showSuccess ? (
         <CreateAlertSuccess alertId={createAlertResult?.alertId} />
       ) : result ? (
-        <SearchResults courses={result.courses || []} onBack={handleBack} onCreateAlert={handleCreateAlert} />
+        <SearchResults courses={result.courses || []} onBack={handleBack} onCreateAlert={handleCreateAlert} processing={creatingAlert} />
       ) : (
         <>
           {error && <ErrorMsg>{error.message || "Unknown error"}</ErrorMsg>}
-          <CreateAlertForm onSubmit={handleSubmit} initialValues={formValues} />
-          {loading && <LoadingMsg>Searching...</LoadingMsg>}
+          <CreateAlertForm onSubmit={handleSubmit} initialValues={formValues} loading={loading} />
         </>
       )}
-      {creatingAlert && <LoadingMsg>Creating alert...</LoadingMsg>}
     </Container>
   )
 }
