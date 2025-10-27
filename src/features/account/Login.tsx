@@ -76,12 +76,37 @@ const Login: React.FC = () => {
         Sign in to your account
       </Title>
       {error && <ErrorMsg>{error}</ErrorMsg>}
-      <Form form={form} layout="vertical" onFinish={onFinish}>
-        <Form.Item name="username" label="Username" rules={[{ required: true, message: "Please enter your username" }]}>
-          <Input autoComplete="username" />
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={onFinish}
+        name="login"
+        autoComplete="on"
+      >
+        <Form.Item
+          name="username"
+          label="Username"
+          rules={[{ required: true, message: "Please enter your username" }]}
+        >
+          <Input
+            id="username"
+            name="username"
+            autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+          />
         </Form.Item>
-        <Form.Item name="password" label="Password" rules={[{ required: true, message: "Please enter your password" }]}>
-          <Input.Password autoComplete="current-password" />
+        <Form.Item
+          name="password"
+          label="Password"
+          rules={[{ required: true, message: "Please enter your password" }]}
+        >
+          <Input.Password
+            id="password"
+            name="password"
+            autoComplete="current-password"
+          />
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" block loading={isMutating}>
