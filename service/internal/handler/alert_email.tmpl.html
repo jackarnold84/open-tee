@@ -95,6 +95,9 @@
         <div><span class="label">Time Range:</span> {{hourAmpm .Alert.TeeTimeSearch.StartHourMin}} -
             {{hourAmpm .Alert.TeeTimeSearch.StartHourMax}}
         </div>
+        {{if gt (len .Alert.TeeTimeSearch.NameContains) 0}}
+        <div><span class="label">Course Filter:</span> {{joinTitleCase .Alert.TeeTimeSearch.NameContains}}</div>
+        {{end}}
         <div><span class="label">ID:</span> {{.Alert.AlertID}}</div>
     </div>
 

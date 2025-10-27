@@ -8,6 +8,7 @@ import (
 	"log"
 	"math"
 	"opentee/common/ses"
+	"strings"
 	"time"
 )
 
@@ -225,6 +226,16 @@ func generateNotificationBody(alert AlertItem, changes SearchChanges) (string, e
 			}
 			return time.Date(2000, 1, 1, h, 0, 0, 0, time.UTC).Format("3:04pm")
 		},
+		"titleCase": func(s string) string {
+			return titleCaseWords(s)
+		},
+		"joinTitleCase": func(arr []string) string {
+			result := make([]string, len(arr))
+			for i, s := range arr {
+				result[i] = titleCaseWords(s)
+			}
+			return strings.Join(result, ", ")
+		},
 	}
 
 	htmlBody, err := ses.HtmlTemplate(string(tmplBytes), data, funcs)
@@ -255,4 +266,14 @@ func isPastDate(dateStr string) (bool, error) {
 		return false, err
 	}
 	return parsed.Before(time.Now()), nil
+}
+
+func titleCaseWords(s string) string {
+	words := strings.Fields(s)
+	for i, word := range words {
+		if len(word) > 0 {
+			words[i] = strings.ToUpper(string(word[0])) + strings.ToLower(word[1:])
+		}
+	}
+	return strings.Join(words, " ")
 }
