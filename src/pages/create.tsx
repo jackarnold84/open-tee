@@ -1,11 +1,14 @@
 import * as React from "react"
+import RequireLogin from "../features/account/RequireLogin"
 import Create from "../features/alert/Create"
 import Layout from "../features/layout/Layout"
 
 const CreatePage = () => {
   return (
     <Layout>
-      <Create />
+      <RequireLogin>
+        <Create />
+      </RequireLogin>
     </Layout>
   )
 }

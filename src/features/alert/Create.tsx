@@ -3,6 +3,7 @@ import styled from "styled-components"
 import useSWRMutation from "swr/mutation"
 import Container from "../../components/Container"
 import { API_BASE } from "../../config/env"
+import { useAuth } from "../layout/AuthProvider"
 import CreateAlertError from "./CreateAlertError"
 import { CreateAlertForm, CreateAlertFormValues } from "./CreateAlertForm"
 import CreateAlertSuccess from "./CreateAlertSuccess"
@@ -10,6 +11,14 @@ import { SearchResults } from "./SearchResults"
 
 const SEARCH_API_URL = `${API_BASE}/opentee/tee-time-search`
 const CREATE_ALERT_API_URL = `${API_BASE}/opentee/create-alert`
+
+const ErrorMsg = styled.div`
+  color: red;
+  margin-bottom: 16px;
+`
+const LoadingMsg = styled.div`
+  margin-top: 16px;
+`
 
 async function searchTeeTimes(url: string, { arg }: { arg: CreateAlertFormValues }) {
   const response = await fetch(url, {
@@ -28,15 +37,32 @@ async function searchTeeTimes(url: string, { arg }: { arg: CreateAlertFormValues
   return response.json()
 }
 
-async function createAlert(url: string, { arg }: { arg: { formValues: CreateAlertFormValues, alertOptions: { newCourses: boolean; teeTimeChanges: boolean; costChanges: boolean } } }) {
-  const { formValues, alertOptions } = arg
+async function createAlert(
+  url: string,
+  { arg }: {
+    arg: {
+      formValues: CreateAlertFormValues;
+      alertOptions: { newCourses: boolean; teeTimeChanges: boolean; costChanges: boolean };
+      alertUser: string;
+      alertEmail: string;
+      token: string;
+    }
+  }
+) {
+  const { formValues, alertOptions, alertUser, alertEmail, token } = arg
   const { ...teeTimeSearch } = formValues
   const payload = {
     teeTimeSearch,
-    alertOptions: alertOptions,
+    alertOptions,
+    alertUser,
+    alertEmail,
   }
   const response = await fetch(url, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Basic ${token}`,
+    },
     body: JSON.stringify(payload),
   })
   if (!response.ok) {
@@ -47,13 +73,15 @@ async function createAlert(url: string, { arg }: { arg: { formValues: CreateAler
     } catch (e) {
       console.error("Create Alert API error, could not read body")
     }
-    // Instead of throwing, return a special error object
     return { error: true, errorMessage: errorBody || "Create alert API request failed" }
   }
   return response.json()
 }
 
 const Create = () => {
+  const { user } = useAuth()
+  const { username, email, token } = user
+
   const [formValues, setFormValues] = React.useState<CreateAlertFormValues | undefined>(undefined)
   const [showSuccess, setShowSuccess] = React.useState(false)
   const [localCreateAlertError, setLocalCreateAlertError] = React.useState<string | null>(null)
@@ -77,7 +105,7 @@ const Create = () => {
 
   const handleCreateAlert = async (alertOptions: { newCourses: boolean; teeTimeChanges: boolean; costChanges: boolean }) => {
     if (!formValues) return
-    const result = await triggerCreateAlert({ formValues, alertOptions })
+    const result = await triggerCreateAlert({ formValues, alertOptions, alertUser: username, alertEmail: email, token })
     if (result && result.error) {
       setLocalCreateAlertError(result.errorMessage || "Failed to create alert")
       return
@@ -107,12 +135,3 @@ const Create = () => {
 }
 
 export default Create
-
-// Add styled components for error/loading
-const ErrorMsg = styled.div`
-  color: red;
-  margin-bottom: 16px;
-`
-const LoadingMsg = styled.div`
-  margin-top: 16px;
-`
