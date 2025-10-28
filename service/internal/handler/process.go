@@ -178,7 +178,8 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 }
 
 func sendNotification(ctx context.Context, alert AlertItem, changes SearchChanges) error {
-	emailBody, err := generateNotificationBody(alert, changes)
+	subject := generateEmailSubject(alert, changes)
+	emailBody, err := generateNotificationBody(alert, changes, subject)
 	if err != nil {
 		return fmt.Errorf("failed to generate email body: %w", err)
 	}
@@ -186,7 +187,7 @@ func sendNotification(ctx context.Context, alert AlertItem, changes SearchChange
 	email := ses.Email{
 		FromAddress: sourceEmail,
 		ToAddress:   alert.AlertEmail,
-		Subject:     "OpenTee - Tee Time Alert",
+		Subject:     subject,
 		Body:        emailBody,
 	}
 	if err := email.Send(ctx); err != nil {
@@ -196,7 +197,31 @@ func sendNotification(ctx context.Context, alert AlertItem, changes SearchChange
 	return nil
 }
 
-func generateNotificationBody(alert AlertItem, changes SearchChanges) (string, error) {
+func generateEmailSubject(alert AlertItem, changes SearchChanges) string {
+	dateStr := alert.TeeTimeSearch.Date
+	parsedDate, err := time.Parse("2006-01-02", dateStr)
+	var formattedDate string
+	if err != nil {
+		formattedDate = dateStr
+	} else {
+		formattedDate = parsedDate.Format("Mon Jan 2")
+	}
+
+	var changeType string
+	if len(changes.NewCourses) > 0 {
+		changeType = "New Courses"
+	} else if len(changes.TeeTimeChanges) > 0 {
+		changeType = "Tee Time Changes"
+	} else if len(changes.CostChanges) > 0 {
+		changeType = "Cost Changes"
+	} else {
+		changeType = "Update"
+	}
+
+	return fmt.Sprintf("OpenTee - %s - %s", formattedDate, changeType)
+}
+
+func generateNotificationBody(alert AlertItem, changes SearchChanges, subject string) (string, error) {
 	tmplBytes, err := alertEmailTmplFS.ReadFile("alert_email.tmpl.html")
 	if err != nil {
 		return "", fmt.Errorf("failed to read email template: %w", err)
@@ -204,9 +229,11 @@ func generateNotificationBody(alert AlertItem, changes SearchChanges) (string, e
 	data := struct {
 		Alert   AlertItem
 		Changes SearchChanges
+		Subject string
 	}{
 		Alert:   alert,
 		Changes: changes,
+		Subject: subject,
 	}
 
 	funcs := template.FuncMap{
