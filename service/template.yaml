@@ -91,6 +91,7 @@ Resources:
               Resource:
                 - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/praisedformula5@gmail.com
                 - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/jarno.push@yahoo.com
+                - !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/rshahani999@gmail.com
 
   OpenTeeScheduler:
     Type: AWS::Serverless::Function
