@@ -32,15 +32,28 @@ func lambdaHandler(ctx context.Context, request events.APIGatewayProxyRequest) (
 			}
 			return lamb.Success(res), nil
 		case "/opentee/create-alert":
+			account, err := handler.Authenticate(request)
+			if err != nil {
+				return lamb.Unauthorized(err), nil
+			}
 			var req handler.CreateAlertRequest
 			if err := lamb.ParseRequestBody(request.Body, &req); err != nil {
 				return lamb.BadRequest(err), nil
+			}
+			if account.Username != req.AlertUser {
+				return lamb.Unauthorized(fmt.Errorf("username mismatch")), nil
 			}
 			res, err := handler.CreateAlert(ctx, req)
 			if err != nil {
 				return lamb.Error(err, "create alert error"), nil
 			}
 			return lamb.Success(res), nil
+		case "/opentee/account":
+			account, err := handler.Authenticate(request)
+			if err != nil {
+				return lamb.Unauthorized(err), nil
+			}
+			return lamb.Success(account), nil
 		}
 	case "DELETE":
 		switch request.Resource {

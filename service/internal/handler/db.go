@@ -12,6 +12,8 @@ const (
 
 type AlertItem struct {
 	AlertID          string                `dynamodbav:"key" json:"alertId"`
+	AlertUser        string                `dynamodbav:"alertUser" json:"alertUser"`
+	AlertEmail       string                `dynamodbav:"alertEmail" json:"alertEmail"`
 	AlertOptions     AlertOptions          `dynamodbav:"alertOptions" json:"alertOptions"`
 	TeeTimeSearch    TeeTimeSearchRequest  `dynamodbav:"teeTimeSearch" json:"teeTimeSearch"`
 	Result           TeeTimeSearchResponse `dynamodbav:"result" json:"result"`

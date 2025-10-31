@@ -11,6 +11,8 @@ import (
 type CreateAlertRequest struct {
 	TeeTimeSearch TeeTimeSearchRequest `json:"teeTimeSearch" validate:"required"`
 	AlertOptions  AlertOptions         `json:"alertOptions" validate:"required"`
+	AlertUser     string               `json:"alertUser" validate:"required"`
+	AlertEmail    string               `json:"alertEmail" validate:"required,email"`
 }
 
 type AlertOptions struct {
@@ -45,6 +47,8 @@ func CreateAlert(ctx context.Context, req CreateAlertRequest) (CreateAlertRespon
 	alertID := genAlertId()
 	alertItem := AlertItem{
 		AlertID:       alertID,
+		AlertUser:     req.AlertUser,
+		AlertEmail:    req.AlertEmail,
 		AlertOptions:  req.AlertOptions,
 		TeeTimeSearch: req.TeeTimeSearch,
 		Result:        teeTimeRes,

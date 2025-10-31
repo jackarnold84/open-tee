@@ -1,18 +1,18 @@
 import * as React from "react"
+import Account from "../features/account/Account"
 import RequireLogin from "../features/account/RequireLogin"
-import Create from "../features/alert/Create"
 import Layout from "../features/layout/Layout"
 
-const CreatePage = () => {
+const AccountPage = () => {
   return (
     <Layout>
       <RequireLogin>
-        <Create />
+        <Account />
       </RequireLogin>
     </Layout>
   )
 }
 
-export default CreatePage
+export default AccountPage
 
-export const Head = () => <title>OpenTee - Create Alert</title>
+export const Head = () => <title>OpenTee - Account</title>

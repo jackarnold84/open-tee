@@ -1,6 +1,5 @@
 {
     "Parameters": {
-        "ENV": "local",
-        "PASSWORD": "admin"
+        "ENV": "local"
     }
 }

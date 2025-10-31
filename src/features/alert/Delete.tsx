@@ -4,6 +4,7 @@ import * as React from "react"
 import { useState } from "react"
 import useSWRMutation from "swr/mutation"
 import Container from "../../components/Container"
+import { API_BASE } from "../../config/env"
 
 const { Title, Text } = Typography
 
@@ -25,7 +26,7 @@ const Delete: React.FC<DeleteProps> = ({ alertId }) => {
     trigger,
     isMutating,
   } = useSWRMutation(
-    `https://rwz8s6f288.execute-api.us-east-2.amazonaws.com/Prod/opentee/delete-alert/${alertId}`,
+    `${API_BASE}/opentee/delete-alert/${alertId}`,
     deleteAlert
   )
 

@@ -6,13 +6,11 @@ import (
 )
 
 type Config struct {
-	Env      string
-	Password string
+	Env string
 }
 
 var Cfg = Config{
-	Env:      getEnvOrDefault("ENV", "dev"),
-	Password: getEnvOrDefault("PASSWORD", "admin"),
+	Env: getEnvOrDefault("ENV", "dev"),
 }
 
 func getEnvOrDefault(key string, def string) string {

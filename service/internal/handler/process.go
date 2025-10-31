@@ -8,6 +8,7 @@ import (
 	"log"
 	"math"
 	"opentee/common/ses"
+	"strings"
 	"time"
 )
 
@@ -177,6 +178,7 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 }
 
 func sendNotification(ctx context.Context, alert AlertItem, changes SearchChanges) error {
+	title := generateAlertTitle(alert, changes)
 	emailBody, err := generateNotificationBody(alert, changes)
 	if err != nil {
 		return fmt.Errorf("failed to generate email body: %w", err)
@@ -184,8 +186,8 @@ func sendNotification(ctx context.Context, alert AlertItem, changes SearchChange
 
 	email := ses.Email{
 		FromAddress: sourceEmail,
-		ToAddress:   targetEmail,
-		Subject:     "OpenTee - Tee Time Alert",
+		ToAddress:   alert.AlertEmail,
+		Subject:     "OpenTee - " + title,
 		Body:        emailBody,
 	}
 	if err := email.Send(ctx); err != nil {
@@ -195,7 +197,32 @@ func sendNotification(ctx context.Context, alert AlertItem, changes SearchChange
 	return nil
 }
 
+func generateAlertTitle(alert AlertItem, changes SearchChanges) string {
+	dateStr := alert.TeeTimeSearch.Date
+	parsedDate, err := time.Parse("2006-01-02", dateStr)
+	var formattedDate string
+	if err != nil {
+		formattedDate = dateStr
+	} else {
+		formattedDate = parsedDate.Format("Mon Jan 2")
+	}
+
+	var changeType string
+	if len(changes.NewCourses) > 0 {
+		changeType = "New Courses"
+	} else if len(changes.TeeTimeChanges) > 0 {
+		changeType = "Tee Time Changes"
+	} else if len(changes.CostChanges) > 0 {
+		changeType = "Cost Changes"
+	} else {
+		changeType = "Update"
+	}
+
+	return fmt.Sprintf("%s - %s", formattedDate, changeType)
+}
+
 func generateNotificationBody(alert AlertItem, changes SearchChanges) (string, error) {
+	title := generateAlertTitle(alert, changes)
 	tmplBytes, err := alertEmailTmplFS.ReadFile("alert_email.tmpl.html")
 	if err != nil {
 		return "", fmt.Errorf("failed to read email template: %w", err)
@@ -203,9 +230,11 @@ func generateNotificationBody(alert AlertItem, changes SearchChanges) (string, e
 	data := struct {
 		Alert   AlertItem
 		Changes SearchChanges
+		Title   string
 	}{
 		Alert:   alert,
 		Changes: changes,
+		Title:   title,
 	}
 
 	funcs := template.FuncMap{
@@ -224,6 +253,16 @@ func generateNotificationBody(alert AlertItem, changes SearchChanges) (string, e
 				return ""
 			}
 			return time.Date(2000, 1, 1, h, 0, 0, 0, time.UTC).Format("3:04pm")
+		},
+		"titleCase": func(s string) string {
+			return titleCaseWords(s)
+		},
+		"joinTitleCase": func(arr []string) string {
+			result := make([]string, len(arr))
+			for i, s := range arr {
+				result[i] = titleCaseWords(s)
+			}
+			return strings.Join(result, ", ")
 		},
 	}
 
@@ -255,4 +294,14 @@ func isPastDate(dateStr string) (bool, error) {
 		return false, err
 	}
 	return parsed.Before(time.Now()), nil
+}
+
+func titleCaseWords(s string) string {
+	words := strings.Fields(s)
+	for i, word := range words {
+		if len(word) > 0 {
+			words[i] = strings.ToUpper(string(word[0])) + strings.ToLower(word[1:])
+		}
+	}
+	return strings.Join(words, " ")
 }

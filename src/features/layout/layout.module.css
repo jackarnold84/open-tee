@@ -45,8 +45,22 @@
   left: 0;
 }
 
+.signInButtonHolder {
+  position: absolute;
+  right: 0;
+}
+
 .menuButton {
+  color: white;
   box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menuTextButton:hover {
+  color: var(--header-text-hover-color);
+  border-color: var(--header-text-hover-color);
 }
 
 .pageContainer {

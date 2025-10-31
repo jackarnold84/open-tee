@@ -57,9 +57,10 @@ export interface CreateAlertFormValues {
 interface CreateAlertFormProps {
   onSubmit: (values: CreateAlertFormValues) => void;
   initialValues?: Partial<CreateAlertFormValues>;
+  loading?: boolean;
 }
 
-export const CreateAlertForm: React.FC<CreateAlertFormProps> = ({ onSubmit, initialValues }) => {
+export const CreateAlertForm: React.FC<CreateAlertFormProps> = ({ onSubmit, initialValues, loading }) => {
   const [form] = Form.useForm()
   const [nameInputs, setNameInputs] = React.useState<string[]>(initialValues?.nameContains || [])
 
@@ -305,7 +306,7 @@ export const CreateAlertForm: React.FC<CreateAlertFormProps> = ({ onSubmit, init
         </NameContainsList>
       </Form.Item>
       <Form.Item style={{ marginTop: 24 }}>
-        <Button type="primary" htmlType="submit" style={{ width: "100%" }}>
+        <Button type="primary" htmlType="submit" style={{ width: "100%" }} loading={loading}>
           Next
         </Button>
       </Form.Item>

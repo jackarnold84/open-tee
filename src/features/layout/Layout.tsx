@@ -2,7 +2,9 @@ import { GithubFilled, MenuOutlined } from "@ant-design/icons"
 import { Button, ConfigProvider, Drawer } from "antd"
 import { Link } from "gatsby"
 import * as React from "react"
+import { MdAccountCircle } from "react-icons/md"
 import '../../styles/global.css'
+import { useAuth } from "./AuthProvider"
 import * as styles from "./layout.module.css"
 import Navigation from "./Navigation"
 
@@ -11,7 +13,14 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const { isLoggedIn } = useAuth();
+
   const [openMenu, setOpenMenu] = React.useState(false);
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const showMenu = () => {
     setOpenMenu(true);
@@ -40,6 +49,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   OpenTee
                 </Link>
               </h3>
+              <div className={styles.signInButtonHolder}>
+                {isMounted &&
+                  <Link to="/account">
+                    {isLoggedIn ? (
+                      <Button
+                        type="primary"
+                        className={styles.menuButton}
+                        icon={<MdAccountCircle />}
+                        size="large"
+                      />
+                    ) : (
+                      <Button
+                        type="ghost"
+                        className={`${styles.menuButton} ${styles.menuTextButton}`}
+                      >
+                        Sign In
+                      </Button>
+                    )}
+                  </Link>
+                }
+              </div>
             </div>
           </header>
 
