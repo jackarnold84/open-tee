@@ -210,8 +210,8 @@ export const SearchResults: React.FC<ResultsProps> = ({ courses, onBack, onCreat
         </AlertOptionsList>
         {optionsError && <ErrorMsg>{optionsError}</ErrorMsg>}
       </AlertOptionsContainer>
-      <Button onClick={onBack} style={{ marginTop: 16, marginRight: 8 }}>Back to Search</Button>
-      <Button type="primary" onClick={handleCreateClick} style={{ marginTop: 16 }} loading={processing}>Create Alert</Button>
+      <Button onClick={onBack} size="large" style={{ marginTop: 16, marginRight: 8 }}>Back to Search</Button>
+      <Button type="primary" size="large" onClick={handleCreateClick} style={{ marginTop: 16 }} loading={processing}>Create Alert</Button>
     </ResultsContainer>
   )
 }

@@ -126,6 +126,7 @@ export const CreateAlertForm: React.FC<CreateAlertFormProps> = ({ onSubmit, init
           disabledDate={current => current && current.isBefore(moment().startOf('day'))}
           allowClear={false}
           inputReadOnly
+          size="large"
         />
       </Form.Item>
       <Form.Item
@@ -137,7 +138,7 @@ export const CreateAlertForm: React.FC<CreateAlertFormProps> = ({ onSubmit, init
           { pattern: /^\d{5}$/, message: "Zip code must be numeric" },
         ]}
       >
-        <Input maxLength={5} />
+        <Input maxLength={5} size="large" inputMode="numeric" />
       </Form.Item>
       <Form.Item
         name="radius"
@@ -152,6 +153,8 @@ export const CreateAlertForm: React.FC<CreateAlertFormProps> = ({ onSubmit, init
           max={50}
           style={{ width: "100%" }}
           addonAfter="miles"
+          size="large"
+          inputMode="numeric"
         />
       </Form.Item>
       <Form.Item
@@ -199,7 +202,7 @@ export const CreateAlertForm: React.FC<CreateAlertFormProps> = ({ onSubmit, init
           { type: "number", min: 0, message: "Max price must be >= 0" },
         ]}
       >
-        <InputNumber min={0} style={{ width: "100%" }} addonBefore="$" />
+        <InputNumber min={0} style={{ width: "100%" }} addonBefore="$" size="large" inputMode="numeric" />
       </Form.Item>
       <Form.Item style={{ marginBottom: 24 }}>
         <DealsOnlyRow>
@@ -281,6 +284,7 @@ export const CreateAlertForm: React.FC<CreateAlertFormProps> = ({ onSubmit, init
               <StyledInput
                 value={val}
                 placeholder="e.g. Pine Lakes"
+                size="large"
                 onChange={e => {
                   const arr = [...nameInputs]
                   arr[idx] = e.target.value
@@ -306,7 +310,7 @@ export const CreateAlertForm: React.FC<CreateAlertFormProps> = ({ onSubmit, init
         </NameContainsList>
       </Form.Item>
       <Form.Item style={{ marginTop: 24 }}>
-        <Button type="primary" htmlType="submit" style={{ width: "100%" }} loading={loading}>
+        <Button type="primary" htmlType="submit" size="large" style={{ width: "100%" }} loading={loading}>
           Next
         </Button>
       </Form.Item>
