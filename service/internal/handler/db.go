@@ -44,3 +44,11 @@ func (db alertDB) Delete(ctx context.Context, alertID string) error {
 func (db alertDB) Scan(ctx context.Context, limit int, out *[]AlertItem) error {
 	return db.table.ScanItems(ctx, limit, out)
 }
+
+func (db alertDB) Get(ctx context.Context, alertID string, out *AlertItem) error {
+	return db.table.GetItem(ctx, alertID, out)
+}
+
+func (db alertDB) ScanByUser(ctx context.Context, username string, out *[]AlertItem) error {
+	return db.table.ScanItemsWithFilter(ctx, "alertUser", username, out)
+}

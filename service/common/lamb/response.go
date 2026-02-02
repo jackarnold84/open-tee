@@ -51,3 +51,19 @@ func Unauthorized(err error) events.APIGatewayProxyResponse {
 	}
 	return buildResponse(401, map[string]any{"status": "UNAUTHORIZED", "error": errMsg})
 }
+
+func Forbidden(err error) events.APIGatewayProxyResponse {
+	errMsg := "forbidden"
+	if err != nil {
+		errMsg = err.Error()
+	}
+	return buildResponse(403, map[string]any{"status": "FORBIDDEN", "error": errMsg})
+}
+
+func NotFound(err error) events.APIGatewayProxyResponse {
+	errMsg := "not found"
+	if err != nil {
+		errMsg = err.Error()
+	}
+	return buildResponse(404, map[string]any{"status": "NOT_FOUND", "error": errMsg})
+}

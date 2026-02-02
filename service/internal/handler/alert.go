@@ -80,3 +80,78 @@ func genAlertId() string {
 	n := rand.Intn(1_000_000_0000)
 	return fmt.Sprintf("%010d", n)
 }
+
+type GetAlertRequest struct {
+	AlertID string `json:"alertId" validate:"required"`
+}
+
+type AlertResponse struct {
+	AlertID       string               `json:"alertId"`
+	AlertUser     string               `json:"alertUser"`
+	AlertEmail    string               `json:"alertEmail"`
+	AlertOptions  AlertOptions         `json:"alertOptions"`
+	TeeTimeSearch TeeTimeSearchRequest `json:"teeTimeSearch"`
+}
+
+type ListAlertsResponse struct {
+	Alerts []AlertResponse `json:"alerts"`
+	Count  int             `json:"count"`
+}
+
+func GetAlert(ctx context.Context, req GetAlertRequest, username string) (AlertResponse, error) {
+	validate := validator.New()
+	if err := validate.Struct(req); err != nil {
+		return AlertResponse{}, err
+	}
+
+	db := AlertDB()
+	var item AlertItem
+	if err := db.Get(ctx, req.AlertID, &item); err != nil {
+		return AlertResponse{}, fmt.Errorf("failed to get alert from DB: %v", err)
+	}
+
+	if item.AlertID == "" {
+		return AlertResponse{}, ErrAlertNotFound
+	}
+
+	if item.AlertUser != username {
+		return AlertResponse{}, ErrAlertForbidden
+	}
+
+	return AlertResponse{
+		AlertID:       item.AlertID,
+		AlertUser:     item.AlertUser,
+		AlertEmail:    item.AlertEmail,
+		AlertOptions:  item.AlertOptions,
+		TeeTimeSearch: item.TeeTimeSearch,
+	}, nil
+}
+
+func ListAlerts(ctx context.Context, username string) (ListAlertsResponse, error) {
+	db := AlertDB()
+	var items []AlertItem
+	if err := db.ScanByUser(ctx, username, &items); err != nil {
+		return ListAlertsResponse{}, fmt.Errorf("failed to scan alerts from DB: %v", err)
+	}
+
+	alerts := make([]AlertResponse, len(items))
+	for i, item := range items {
+		alerts[i] = AlertResponse{
+			AlertID:       item.AlertID,
+			AlertUser:     item.AlertUser,
+			AlertEmail:    item.AlertEmail,
+			AlertOptions:  item.AlertOptions,
+			TeeTimeSearch: item.TeeTimeSearch,
+		}
+	}
+
+	return ListAlertsResponse{
+		Alerts: alerts,
+		Count:  len(alerts),
+	}, nil
+}
+
+var (
+	ErrAlertNotFound  = fmt.Errorf("alert not found")
+	ErrAlertForbidden = fmt.Errorf("alert belongs to another user")
+)

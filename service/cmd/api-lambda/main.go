@@ -18,6 +18,36 @@ func lambdaHandler(ctx context.Context, request events.APIGatewayProxyRequest) (
 		switch request.Resource {
 		case "/opentee/health":
 			return lamb.Success(map[string]string{"status": "healthy"}), nil
+		case "/opentee/alert/{alertId}":
+			account, err := handler.Authenticate(request)
+			if err != nil {
+				return lamb.Unauthorized(err), nil
+			}
+			var req handler.GetAlertRequest
+			if err := lamb.ParseParameters(request.PathParameters, &req); err != nil {
+				return lamb.BadRequest(err), nil
+			}
+			res, err := handler.GetAlert(ctx, req, account.Username)
+			if err != nil {
+				if err == handler.ErrAlertNotFound {
+					return lamb.NotFound(err), nil
+				}
+				if err == handler.ErrAlertForbidden {
+					return lamb.Forbidden(err), nil
+				}
+				return lamb.Error(err, "get alert error"), nil
+			}
+			return lamb.Success(res), nil
+		case "/opentee/alerts":
+			account, err := handler.Authenticate(request)
+			if err != nil {
+				return lamb.Unauthorized(err), nil
+			}
+			res, err := handler.ListAlerts(ctx, account.Username)
+			if err != nil {
+				return lamb.Error(err, "list alerts error"), nil
+			}
+			return lamb.Success(res), nil
 		}
 	case "POST":
 		switch request.Resource {
