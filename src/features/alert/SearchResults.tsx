@@ -22,6 +22,12 @@ interface ResultsProps {
     costChanges: boolean;
   }) => void
   processing?: boolean
+  initialAlertOptions?: {
+    newCourses: boolean;
+    teeTimeChanges: boolean;
+    costChanges: boolean;
+  }
+  isEditMode?: boolean
 }
 
 const ResultsContainer = styled.div`
@@ -134,11 +140,11 @@ function formatTime(time: string) {
   return `${hour}${min !== 0 ? ":" + minStr : ""}${ampm}`;
 }
 
-export const SearchResults: React.FC<ResultsProps> = ({ courses, onBack, onCreateAlert, processing }) => {
+export const SearchResults: React.FC<ResultsProps> = ({ courses, onBack, onCreateAlert, processing, initialAlertOptions, isEditMode }) => {
   const [alertOptions, setAlertOptions] = React.useState({
-    newCourses: false,
-    teeTimeChanges: false,
-    costChanges: false,
+    newCourses: initialAlertOptions?.newCourses ?? false,
+    teeTimeChanges: initialAlertOptions?.teeTimeChanges ?? false,
+    costChanges: initialAlertOptions?.costChanges ?? false,
   })
   const [optionsError, setOptionsError] = React.useState<string | null>(null)
 
@@ -211,7 +217,7 @@ export const SearchResults: React.FC<ResultsProps> = ({ courses, onBack, onCreat
         {optionsError && <ErrorMsg>{optionsError}</ErrorMsg>}
       </AlertOptionsContainer>
       <Button onClick={onBack} size="large" style={{ marginTop: 16, marginRight: 8 }}>Back to Search</Button>
-      <Button type="primary" size="large" onClick={handleCreateClick} style={{ marginTop: 16 }} loading={processing}>Create Alert</Button>
+      <Button type="primary" size="large" onClick={handleCreateClick} style={{ marginTop: 16 }} loading={processing}>{isEditMode ? "Update Alert" : "Create Alert"}</Button>
     </ResultsContainer>
   )
 }

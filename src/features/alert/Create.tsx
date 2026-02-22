@@ -1,5 +1,7 @@
+import { Alert, Button } from "antd"
 import * as React from "react"
 import styled from "styled-components"
+import useSWR from "swr"
 import useSWRMutation from "swr/mutation"
 import Container from "../../components/Container"
 import { API_BASE } from "../../config/env"
@@ -11,11 +13,51 @@ import { SearchResults } from "./SearchResults"
 
 const SEARCH_API_URL = `${API_BASE}/opentee/tee-time-search`
 const CREATE_ALERT_API_URL = `${API_BASE}/opentee/create-alert`
+const GET_ALERT_API_URL = `${API_BASE}/opentee/alert`
 
 const ErrorMsg = styled.div`
   color: red;
   margin-bottom: 16px;
 `
+
+interface AlertResponse {
+  alertId: string;
+  alertUser: string;
+  alertEmail: string;
+  alertOptions: { newCourses: boolean; teeTimeChanges: boolean; costChanges: boolean };
+  teeTimeSearch: {
+    date: string;
+    zipCode: string;
+    radius: number;
+    holes: number;
+    players: number;
+    priceMax: number;
+    dealsOnly: boolean;
+    startHourMin: number;
+    startHourMax: number;
+    ratingMin: number;
+    nameContains: string[];
+  };
+}
+
+async function fetchAlert(url: string, token: string): Promise<AlertResponse> {
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Authorization": `Basic ${token}`,
+    },
+  })
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error("Alert not found")
+    }
+    if (response.status === 403) {
+      throw new Error("You don't have permission to edit this alert")
+    }
+    throw new Error("Failed to load alert")
+  }
+  return response.json()
+}
 
 async function searchTeeTimes(url: string, { arg }: { arg: CreateAlertFormValues }) {
   const response = await fetch(url, {
@@ -43,16 +85,20 @@ async function createAlert(
       alertUser: string;
       alertEmail: string;
       token: string;
+      alertId?: string;
     }
   }
 ) {
-  const { formValues, alertOptions, alertUser, alertEmail, token } = arg
+  const { formValues, alertOptions, alertUser, alertEmail, token, alertId } = arg
   const { ...teeTimeSearch } = formValues
-  const payload = {
+  const payload: any = {
     teeTimeSearch,
     alertOptions,
     alertUser,
     alertEmail,
+  }
+  if (alertId) {
+    payload.alertId = alertId
   }
   const response = await fetch(url, {
     method: "POST",
@@ -75,9 +121,45 @@ async function createAlert(
   return response.json()
 }
 
-const Create = () => {
+interface Props {
+  editAlertId?: string
+}
+
+const Create: React.FC<Props> = ({ editAlertId }) => {
   const { user } = useAuth()
   const { username, email, token } = user
+
+  const [alertId, setAlertId] = React.useState<string | null>(editAlertId || null)
+  const [existingAlertOptions, setExistingAlertOptions] = React.useState<{ newCourses: boolean; teeTimeChanges: boolean; costChanges: boolean } | null>(null)
+
+  // Fetch existing alert when in edit mode
+  const { data: existingAlert, error: fetchAlertError, isLoading: loadingAlert } = useSWR(
+    alertId ? `${GET_ALERT_API_URL}/${alertId}` : null,
+    (url) => fetchAlert(url, token)
+  )
+
+  const existingFormValues = React.useMemo(() => {
+    if (!existingAlert) return undefined
+    const search = existingAlert.teeTimeSearch
+    return {
+      date: search.date,
+      zipCode: search.zipCode,
+      radius: search.radius,
+      holes: search.holes,
+      players: search.players,
+      priceMax: search.priceMax,
+      dealsOnly: search.dealsOnly,
+      startHourRange: [search.startHourMin, search.startHourMax] as [number, number],
+      ratingMin: search.ratingMin,
+      nameContains: search.nameContains || [],
+    }
+  }, [existingAlert])
+
+  React.useEffect(() => {
+    if (existingAlert) {
+      setExistingAlertOptions(existingAlert.alertOptions)
+    }
+  }, [existingAlert])
 
   const [formValues, setFormValues] = React.useState<CreateAlertFormValues | undefined>(undefined)
   const [showSuccess, setShowSuccess] = React.useState(false)
@@ -91,6 +173,15 @@ const Create = () => {
     createAlert
   )
 
+  const isEditMode = !!alertId
+  const clearEditMode = () => {
+    setAlertId(null)
+    setExistingAlertOptions(null)
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }
+
   const handleSubmit = async (values: CreateAlertFormValues) => {
     setFormValues(values)
     await trigger(values)
@@ -102,27 +193,58 @@ const Create = () => {
 
   const handleCreateAlert = async (alertOptions: { newCourses: boolean; teeTimeChanges: boolean; costChanges: boolean }) => {
     if (!formValues) return
-    const result = await triggerCreateAlert({ formValues, alertOptions, alertUser: username, alertEmail: email, token })
+    const result = await triggerCreateAlert({
+      formValues,
+      alertOptions,
+      alertUser: username,
+      alertEmail: email,
+      token,
+      alertId: alertId || undefined
+    })
     if (result && result.error) {
-      setLocalCreateAlertError(result.errorMessage || "Failed to create alert")
+      setLocalCreateAlertError(result.errorMessage || (isEditMode ? "Failed to update alert" : "Failed to create alert"))
       return
     }
     setShowSuccess(true)
   }
 
+  if (isEditMode && fetchAlertError) {
+    return (
+      <Container size={16} centered width={400}>
+        <h2>Edit Alert</h2>
+        <Alert
+          type="error"
+          message={fetchAlertError.message || "Failed to load alert"}
+          style={{ marginBottom: 16 }}
+        />
+        <Button type="primary" onClick={clearEditMode}>
+          Create New Alert
+        </Button>
+      </Container>
+    )
+  }
+
   return (
     <Container size={16} centered width={400}>
-      <h2>Create Alert</h2>
-      {localCreateAlertError || createAlertError ? (
-        <CreateAlertError errorMessage={localCreateAlertError || createAlertError?.message || "Failed to create alert"} />
+      <h2>{isEditMode ? "Edit Alert" : "Create Alert"}</h2>
+      {isEditMode && <Alert type="info" message={loadingAlert ? "Loading..." : `Editing alert ${alertId}`} style={{ marginBottom: 16 }} />}
+      {isEditMode && loadingAlert ? null : localCreateAlertError || createAlertError ? (
+        <CreateAlertError errorMessage={localCreateAlertError || createAlertError?.message || (isEditMode ? "Failed to update alert" : "Failed to create alert")} />
       ) : showSuccess ? (
-        <CreateAlertSuccess alertId={createAlertResult?.alertId} />
+        <CreateAlertSuccess alertId={createAlertResult?.alertId} isUpdate={isEditMode} />
       ) : result ? (
-        <SearchResults courses={result.courses || []} onBack={handleBack} onCreateAlert={handleCreateAlert} processing={creatingAlert} />
+        <SearchResults
+          courses={result.courses || []}
+          onBack={handleBack}
+          onCreateAlert={handleCreateAlert}
+          processing={creatingAlert}
+          initialAlertOptions={existingAlertOptions || undefined}
+          isEditMode={isEditMode}
+        />
       ) : (
         <>
           {error && <ErrorMsg>{error.message || "Unknown error"}</ErrorMsg>}
-          <CreateAlertForm onSubmit={handleSubmit} initialValues={formValues} loading={loading} />
+          <CreateAlertForm onSubmit={handleSubmit} initialValues={formValues || existingFormValues} loading={loading} />
         </>
       )}
     </Container>

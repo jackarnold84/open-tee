@@ -9,6 +9,7 @@ import (
 )
 
 type CreateAlertRequest struct {
+	AlertID       string               `json:"alertId"`
 	TeeTimeSearch TeeTimeSearchRequest `json:"teeTimeSearch" validate:"required"`
 	AlertOptions  AlertOptions         `json:"alertOptions" validate:"required"`
 	AlertUser     string               `json:"alertUser" validate:"required"`
@@ -39,12 +40,31 @@ func CreateAlert(ctx context.Context, req CreateAlertRequest) (CreateAlertRespon
 		return CreateAlertResponse{}, err
 	}
 
+	db := AlertDB()
+	alertID := req.AlertID
+
+	if alertID != "" {
+		// Edit mode: If alertId is provided, verify it exists and belongs to the user
+		var existingItem AlertItem
+		if err := db.Get(ctx, alertID, &existingItem); err != nil {
+			return CreateAlertResponse{}, fmt.Errorf("failed to get existing alert: %v", err)
+		}
+		if existingItem.AlertID == "" {
+			return CreateAlertResponse{}, ErrAlertNotFound
+		}
+		if existingItem.AlertUser != req.AlertUser {
+			return CreateAlertResponse{}, ErrAlertForbidden
+		}
+	} else {
+		// Create mode: generate new ID
+		alertID = genAlertId()
+	}
+
 	teeTimeRes, err := TeeTimeSearch(req.TeeTimeSearch)
 	if err != nil {
 		return CreateAlertResponse{}, fmt.Errorf("tee time search failed: %v", err)
 	}
 
-	alertID := genAlertId()
 	alertItem := AlertItem{
 		AlertID:       alertID,
 		AlertUser:     req.AlertUser,
@@ -54,7 +74,6 @@ func CreateAlert(ctx context.Context, req CreateAlertRequest) (CreateAlertRespon
 		Result:        teeTimeRes,
 	}
 
-	db := AlertDB()
 	if err := db.Put(ctx, alertItem); err != nil {
 		return CreateAlertResponse{}, fmt.Errorf("failed to save alert to DB: %v", err)
 	}

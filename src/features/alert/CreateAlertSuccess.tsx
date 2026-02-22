@@ -5,16 +5,17 @@ import * as React from "react"
 
 interface Props {
   alertId?: string
+  isUpdate?: boolean
 }
 
-const CreateAlertSuccess: React.FC<Props> = ({ alertId }) => (
+const CreateAlertSuccess: React.FC<Props> = ({ alertId, isUpdate }) => (
   <Result
     status="success"
-    title="Alert Created!"
+    title={isUpdate ? "Alert Updated!" : "Alert Created!"}
     icon={<CheckCircleFilled style={{ color: "#768f13" }} />}
     subTitle={
       <>
-        Your alert has been successfully created. You will be notified via email for any changes.<br />
+        Your alert has been successfully {isUpdate ? "updated" : "created"}. You will be notified via email for any changes.<br />
         {alertId && (
           <Typography.Text style={{ display: 'block', marginTop: 12 }}>
             <strong>Alert ID:</strong> {alertId}

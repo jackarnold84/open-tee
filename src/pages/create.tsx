@@ -1,13 +1,17 @@
+import { PageProps } from "gatsby"
 import * as React from "react"
 import RequireLogin from "../features/account/RequireLogin"
 import Create from "../features/alert/Create"
 import Layout from "../features/layout/Layout"
 
-const CreatePage = () => {
+const CreatePage: React.FC<PageProps> = ({ location }) => {
+  const searchParams = new URLSearchParams(location.search)
+  const editAlertId = searchParams.get('edit') || undefined
+
   return (
     <Layout>
       <RequireLogin>
-        <Create />
+        <Create editAlertId={editAlertId} />
       </RequireLogin>
     </Layout>
   )
