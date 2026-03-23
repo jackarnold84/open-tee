@@ -123,18 +123,20 @@ async function createAlert(
 
 interface Props {
   editAlertId?: string
+  cloneAlertId?: string
 }
 
-const Create: React.FC<Props> = ({ editAlertId }) => {
+const Create: React.FC<Props> = ({ editAlertId, cloneAlertId }) => {
   const { user } = useAuth()
   const { username, email, token } = user
 
   const [alertId, setAlertId] = React.useState<string | null>(editAlertId || null)
   const [existingAlertOptions, setExistingAlertOptions] = React.useState<{ newCourses: boolean; teeTimeChanges: boolean; costChanges: boolean } | null>(null)
 
-  // Fetch existing alert when in edit mode
+  // Fetch existing alert when in edit or clone mode
+  const fetchAlertId = alertId || cloneAlertId || null
   const { data: existingAlert, error: fetchAlertError, isLoading: loadingAlert } = useSWR(
-    alertId ? `${GET_ALERT_API_URL}/${alertId}` : null,
+    fetchAlertId ? `${GET_ALERT_API_URL}/${fetchAlertId}` : null,
     (url) => fetchAlert(url, token)
   )
 
@@ -182,6 +184,17 @@ const Create: React.FC<Props> = ({ editAlertId }) => {
     }
   }
 
+  const handleCreateNew = () => {
+    setAlertId(null)
+    setExistingAlertOptions(null)
+    setFormValues(undefined)
+    setShowSuccess(false)
+    reset()
+    if (typeof window !== 'undefined') {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }
+
   const handleSubmit = async (values: CreateAlertFormValues) => {
     setFormValues(values)
     await trigger(values)
@@ -208,10 +221,12 @@ const Create: React.FC<Props> = ({ editAlertId }) => {
     setShowSuccess(true)
   }
 
-  if (isEditMode && fetchAlertError) {
+  const isCloneMode = !!cloneAlertId && !isEditMode
+
+  if ((isEditMode || isCloneMode) && fetchAlertError) {
     return (
       <Container size={16} centered width={400}>
-        <h2>Edit Alert</h2>
+        <h2>{isEditMode ? "Edit Alert" : "Clone Alert"}</h2>
         <Alert
           type="error"
           message={fetchAlertError.message || "Failed to load alert"}
@@ -226,12 +241,13 @@ const Create: React.FC<Props> = ({ editAlertId }) => {
 
   return (
     <Container size={16} centered width={400}>
-      <h2>{isEditMode ? "Edit Alert" : "Create Alert"}</h2>
+      <h2>{isEditMode ? "Edit Alert" : isCloneMode ? "Clone Alert" : "Create Alert"}</h2>
       {isEditMode && <Alert type="info" message={loadingAlert ? "Loading..." : `Editing alert ${alertId}`} style={{ marginBottom: 16 }} />}
-      {isEditMode && loadingAlert ? null : localCreateAlertError || createAlertError ? (
+      {isCloneMode && <Alert type="info" message={loadingAlert ? "Loading..." : `Cloning alert ${cloneAlertId}`} style={{ marginBottom: 16 }} />}
+      {(isEditMode || isCloneMode) && loadingAlert ? null : localCreateAlertError || createAlertError ? (
         <CreateAlertError errorMessage={localCreateAlertError || createAlertError?.message || (isEditMode ? "Failed to update alert" : "Failed to create alert")} />
       ) : showSuccess ? (
-        <CreateAlertSuccess alertId={createAlertResult?.alertId} isUpdate={isEditMode} />
+        <CreateAlertSuccess alertId={createAlertResult?.alertId} isUpdate={isEditMode} onCreateNew={handleCreateNew} />
       ) : result ? (
         <SearchResults
           courses={result.courses || []}

@@ -6,9 +6,10 @@ import * as React from "react"
 interface Props {
   alertId?: string
   isUpdate?: boolean
+  onCreateNew?: () => void
 }
 
-const CreateAlertSuccess: React.FC<Props> = ({ alertId, isUpdate }) => (
+const CreateAlertSuccess: React.FC<Props> = ({ alertId, isUpdate, onCreateNew }) => (
   <Result
     status="success"
     title={isUpdate ? "Alert Updated!" : "Alert Created!"}
@@ -23,13 +24,21 @@ const CreateAlertSuccess: React.FC<Props> = ({ alertId, isUpdate }) => (
         )}
       </>
     }
-    extra={[
-      <Link to="/" key="done">
-        <Button type="primary">
-          Done
-        </Button>
-      </Link>
-    ]}
+    extra={
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "stretch", maxWidth: 280, margin: "0 auto" }}>
+        <Link to="/" key="done">
+          <Button type="primary" block>Done</Button>
+        </Link>
+        {!isUpdate && alertId && (
+          <>
+            <Link to={`/create?clone=${alertId}`} key="clone">
+              <Button block>Clone Alert</Button>
+            </Link>
+            <Button block onClick={onCreateNew}>Create New Alert</Button>
+          </>
+        )}
+      </div>
+    }
   />
 )
 
