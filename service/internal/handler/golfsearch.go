@@ -39,6 +39,7 @@ type Course struct {
 	StartTimeMin  string  `json:"startTimeMin"`
 	StartTimeMax  string  `json:"startTimeMax"`
 	AverageRating float64 `json:"averageRating"`
+	ImageURL      string  `json:"imageURL" dynamodbav:"imageURL"`
 }
 
 func TeeTimeSearch(req TeeTimeSearchRequest) (TeeTimeSearchResponse, error) {
@@ -87,7 +88,12 @@ func TeeTimeSearch(req TeeTimeSearchRequest) (TeeTimeSearchResponse, error) {
 	}
 
 	res.Courses = make([]Course, 0, len(gnResp))
+	seen := make(map[int]bool)
 	for _, facility := range gnResp {
+		if seen[facility.ID] {
+			continue
+		}
+		seen[facility.ID] = true
 		if facility.AverageRating < req.RatingMin {
 			continue
 		}
@@ -104,6 +110,7 @@ func TeeTimeSearch(req TeeTimeSearchRequest) (TeeTimeSearchResponse, error) {
 			StartTimeMin:  extractTime(facility.MinDate.Date),
 			StartTimeMax:  extractTime(facility.MaxDate.Date),
 			AverageRating: math.Round(facility.AverageRating*100) / 100,
+			ImageURL:      facility.ThumbnailImagePath,
 		}
 		res.Courses = append(res.Courses, course)
 		res.TotalTeeTimes += facility.NumberOfTeeTimes

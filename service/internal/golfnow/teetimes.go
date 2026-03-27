@@ -40,14 +40,15 @@ type TeeTimesResponse struct {
 }
 
 type Facility struct {
-	ID               int           `json:"id"`
-	Name             string        `json:"name"`
-	Address          Address       `json:"address"`
-	NumberOfTeeTimes int           `json:"numberOfTeeTimes"`
-	MinPrice         FacilityPrice `json:"minPrice"`
-	MinDate          FacilityDate  `json:"minDate"`
-	MaxDate          FacilityDate  `json:"maxDate"`
-	AverageRating    float64       `json:"averageRating"`
+	ID                 int           `json:"id"`
+	Name               string        `json:"name"`
+	Address            Address       `json:"address"`
+	NumberOfTeeTimes   int           `json:"numberOfTeeTimes"`
+	MinPrice           FacilityPrice `json:"minPrice"`
+	MinDate            FacilityDate  `json:"minDate"`
+	MaxDate            FacilityDate  `json:"maxDate"`
+	AverageRating      float64       `json:"averageRating"`
+	ThumbnailImagePath string        `json:"thumbnailImagePath"`
 }
 
 type Address struct {
