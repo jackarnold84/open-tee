@@ -3,7 +3,7 @@ import * as React from "react"
 import styled from "styled-components"
 import Container from "../../components/Container"
 
-interface Course {
+export interface Course {
   id: number
   name: string
   location: string

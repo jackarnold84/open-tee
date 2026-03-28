@@ -1,4 +1,5 @@
 import { Alert, Button } from "antd"
+import { navigate } from "gatsby"
 import * as React from "react"
 import styled from "styled-components"
 import useSWR from "swr"
@@ -6,13 +7,9 @@ import useSWRMutation from "swr/mutation"
 import Container from "../../components/Container"
 import { API_BASE } from "../../config/env"
 import { useAuth } from "../layout/AuthProvider"
-import CreateAlertError from "./CreateAlertError"
 import { CreateAlertForm, CreateAlertFormValues } from "./CreateAlertForm"
-import CreateAlertSuccess from "./CreateAlertSuccess"
-import { SearchResults } from "./SearchResults"
 
 const SEARCH_API_URL = `${API_BASE}/opentee/tee-time-search`
-const CREATE_ALERT_API_URL = `${API_BASE}/opentee/create-alert`
 const GET_ALERT_API_URL = `${API_BASE}/opentee/alert`
 
 const ErrorMsg = styled.div`
@@ -76,50 +73,7 @@ async function searchTeeTimes(url: string, { arg }: { arg: CreateAlertFormValues
   return response.json()
 }
 
-async function createAlert(
-  url: string,
-  { arg }: {
-    arg: {
-      formValues: CreateAlertFormValues;
-      alertOptions: { newCourses: boolean; teeTimeChanges: boolean; costChanges: boolean };
-      alertUser: string;
-      alertEmail: string;
-      token: string;
-      alertId?: string;
-    }
-  }
-) {
-  const { formValues, alertOptions, alertUser, alertEmail, token, alertId } = arg
-  const { ...teeTimeSearch } = formValues
-  const payload: any = {
-    teeTimeSearch,
-    alertOptions,
-    alertUser,
-    alertEmail,
-  }
-  if (alertId) {
-    payload.alertId = alertId
-  }
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Basic ${token}`,
-    },
-    body: JSON.stringify(payload),
-  })
-  if (!response.ok) {
-    let errorBody = ""
-    try {
-      errorBody = await response.text()
-      console.error("Create Alert API error response:", errorBody)
-    } catch (e) {
-      console.error("Create Alert API error, could not read body")
-    }
-    return { error: true, errorMessage: errorBody || "Create alert API request failed" }
-  }
-  return response.json()
-}
+const FORM_STORAGE_KEY = 'opentee_create_form'
 
 interface Props {
   editAlertId?: string
@@ -128,7 +82,7 @@ interface Props {
 
 const Create: React.FC<Props> = ({ editAlertId, cloneAlertId }) => {
   const { user } = useAuth()
-  const { username, email, token } = user
+  const { token } = user
 
   const [alertId, setAlertId] = React.useState<string | null>(editAlertId || null)
   const [existingAlertOptions, setExistingAlertOptions] = React.useState<{ newCourses: boolean; teeTimeChanges: boolean; costChanges: boolean } | null>(null)
@@ -163,16 +117,16 @@ const Create: React.FC<Props> = ({ editAlertId, cloneAlertId }) => {
     }
   }, [existingAlert])
 
-  const [formValues, setFormValues] = React.useState<CreateAlertFormValues | undefined>(undefined)
-  const [showSuccess, setShowSuccess] = React.useState(false)
-  const [localCreateAlertError, setLocalCreateAlertError] = React.useState<string | null>(null)
-  const { trigger, data: result, error, isMutating: loading, reset } = useSWRMutation(
+  const [formValues, setFormValues] = React.useState<CreateAlertFormValues | undefined>(() => {
+    if (editAlertId || cloneAlertId) return undefined
+    if (typeof window === 'undefined') return undefined
+    const saved = sessionStorage.getItem(FORM_STORAGE_KEY)
+    if (!saved) return undefined
+    try { return JSON.parse(saved) } catch { return undefined }
+  })
+  const { trigger, error, isMutating: loading } = useSWRMutation(
     SEARCH_API_URL,
     searchTeeTimes
-  )
-  const { trigger: triggerCreateAlert, data: createAlertResult, isMutating: creatingAlert, error: createAlertError } = useSWRMutation(
-    CREATE_ALERT_API_URL,
-    createAlert
   )
 
   const isEditMode = !!alertId
@@ -184,41 +138,26 @@ const Create: React.FC<Props> = ({ editAlertId, cloneAlertId }) => {
     }
   }
 
-  const handleCreateNew = () => {
-    setAlertId(null)
-    setExistingAlertOptions(null)
-    setFormValues(undefined)
-    setShowSuccess(false)
-    reset()
-    if (typeof window !== 'undefined') {
-      window.history.replaceState({}, '', window.location.pathname)
-    }
-  }
-
   const handleSubmit = async (values: CreateAlertFormValues) => {
     setFormValues(values)
-    await trigger(values)
-  }
-
-  const handleBack = () => {
-    reset()
-  }
-
-  const handleCreateAlert = async (alertOptions: { newCourses: boolean; teeTimeChanges: boolean; costChanges: boolean }) => {
-    if (!formValues) return
-    const result = await triggerCreateAlert({
-      formValues,
-      alertOptions,
-      alertUser: username,
-      alertEmail: email,
-      token,
-      alertId: alertId || undefined
-    })
-    if (result && result.error) {
-      setLocalCreateAlertError(result.errorMessage || (isEditMode ? "Failed to update alert" : "Failed to create alert"))
-      return
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(values))
     }
-    setShowSuccess(true)
+    try {
+      const searchResult = await trigger(values)
+      if (!searchResult) return
+      const targetPath = alertId ? `/create/result?edit=${alertId}` : `/create/result`
+      navigate(targetPath, {
+        state: {
+          courses: searchResult.courses || [],
+          formValues: values,
+          editAlertId: alertId || undefined,
+          existingAlertOptions: existingAlertOptions || undefined,
+        }
+      })
+    } catch {
+      // error state from useSWRMutation populates; shown inline on form
+    }
   }
 
   const isCloneMode = !!cloneAlertId && !isEditMode
@@ -244,20 +183,7 @@ const Create: React.FC<Props> = ({ editAlertId, cloneAlertId }) => {
       <h2>{isEditMode ? "Edit Alert" : isCloneMode ? "Clone Alert" : "Create Alert"}</h2>
       {isEditMode && <Alert type="info" message={loadingAlert ? "Loading..." : `Editing alert ${alertId}`} style={{ marginBottom: 16 }} />}
       {isCloneMode && <Alert type="info" message={loadingAlert ? "Loading..." : `Cloning alert ${cloneAlertId}`} style={{ marginBottom: 16 }} />}
-      {(isEditMode || isCloneMode) && loadingAlert ? null : localCreateAlertError || createAlertError ? (
-        <CreateAlertError errorMessage={localCreateAlertError || createAlertError?.message || (isEditMode ? "Failed to update alert" : "Failed to create alert")} />
-      ) : showSuccess ? (
-        <CreateAlertSuccess alertId={createAlertResult?.alertId} isUpdate={isEditMode} onCreateNew={handleCreateNew} />
-      ) : result ? (
-        <SearchResults
-          courses={result.courses || []}
-          onBack={handleBack}
-          onCreateAlert={handleCreateAlert}
-          processing={creatingAlert}
-          initialAlertOptions={existingAlertOptions || undefined}
-          isEditMode={isEditMode}
-        />
-      ) : (
+      {(isEditMode || isCloneMode) && loadingAlert ? null : (
         <>
           {error && <ErrorMsg>{error.message || "Unknown error"}</ErrorMsg>}
           <CreateAlertForm onSubmit={handleSubmit} initialValues={formValues || existingFormValues} loading={loading} />
