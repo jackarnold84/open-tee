@@ -118,7 +118,7 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 			})
 		}
 
-		if math.Abs(currCourse.PriceMin-prevCourse.PriceMin) > 0.50 {
+		if math.Abs(currCourse.PriceMin-prevCourse.PriceMin) > 0.05*currCourse.PriceMin {
 			changes.CostChanges = append(changes.CostChanges, CourseChange{
 				Prev:    prevCourse,
 				Current: currCourse,
