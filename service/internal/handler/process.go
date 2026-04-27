@@ -134,16 +134,21 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 		}
 	}
 
-	// only alert for new courses not already alerted
+	// only alert for new courses not already alerted (skip for alerts with course name filters)
 	newCoursesToAlert := make([]Course, 0, len(changes.NewCourses))
-	alreadyAlertedSet := make(map[int]bool, len(item.NewCourseAlerted))
-	for _, id := range item.NewCourseAlerted {
-		alreadyAlertedSet[id] = true
-	}
-	for _, course := range changes.NewCourses {
-		if !alreadyAlertedSet[course.ID] {
-			newCoursesToAlert = append(newCoursesToAlert, course)
+	hasNameFilter := len(item.TeeTimeSearch.NameContains) > 0
+	if !hasNameFilter {
+		alreadyAlertedSet := make(map[int]bool, len(item.NewCourseAlerted))
+		for _, id := range item.NewCourseAlerted {
+			alreadyAlertedSet[id] = true
 		}
+		for _, course := range changes.NewCourses {
+			if !alreadyAlertedSet[course.ID] {
+				newCoursesToAlert = append(newCoursesToAlert, course)
+			}
+		}
+	} else {
+		newCoursesToAlert = changes.NewCourses
 	}
 	changes.NewCourses = newCoursesToAlert
 
@@ -157,9 +162,15 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 		notified = true
 
 		// update NewCourseAlerted
-		for _, course := range changes.NewCourses {
-			if _, included := alreadyAlertedSet[course.ID]; !included {
-				item.NewCourseAlerted = append(item.NewCourseAlerted, course.ID)
+		if !hasNameFilter {
+			alreadyAlertedSet := make(map[int]bool, len(item.NewCourseAlerted))
+			for _, id := range item.NewCourseAlerted {
+				alreadyAlertedSet[id] = true
+			}
+			for _, course := range changes.NewCourses {
+				if _, included := alreadyAlertedSet[course.ID]; !included {
+					item.NewCourseAlerted = append(item.NewCourseAlerted, course.ID)
+				}
 			}
 		}
 	}
