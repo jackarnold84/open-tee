@@ -40,19 +40,28 @@ type TeeTimesResponse struct {
 }
 
 type Facility struct {
-	ID               int     `json:"id"`
-	Name             string  `json:"name"`
-	Address          Address `json:"address"`
-	NumberOfTeeTimes int     `json:"numberOfTeeTimes"`
-	MinPrice         float64 `json:"minPrice"`
-	MinDate          string  `json:"minDate"`
-	MaxDate          string  `json:"maxDate"`
-	AverageRating    float64 `json:"averageRating"`
+	ID                 int           `json:"id"`
+	Name               string        `json:"name"`
+	Address            Address       `json:"address"`
+	NumberOfTeeTimes   int           `json:"numberOfTeeTimes"`
+	MinPrice           FacilityPrice `json:"minPrice"`
+	MinDate            FacilityDate  `json:"minDate"`
+	MaxDate            FacilityDate  `json:"maxDate"`
+	AverageRating      float64       `json:"averageRating"`
+	ThumbnailImagePath string        `json:"thumbnailImagePath"`
 }
 
 type Address struct {
 	City              string `json:"city"`
 	StateProvinceCode string `json:"stateProvinceCode"`
+}
+
+type FacilityDate struct {
+	Date string `json:"date"`
+}
+
+type FacilityPrice struct {
+	Value float64 `json:"value"`
 }
 
 func TeeTimes(request TeeTimesRequest) ([]Facility, error) {

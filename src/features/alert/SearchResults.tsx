@@ -1,8 +1,9 @@
-import { Button } from "antd"
+import { Button, Switch } from "antd"
 import * as React from "react"
 import styled from "styled-components"
+import Container from "../../components/Container"
 
-interface Course {
+export interface Course {
   id: number
   name: string
   location: string
@@ -11,6 +12,7 @@ interface Course {
   startTimeMin: string
   startTimeMax: string
   averageRating: number
+  imageURL?: string
 }
 
 interface ResultsProps {
@@ -22,6 +24,12 @@ interface ResultsProps {
     costChanges: boolean;
   }) => void
   processing?: boolean
+  initialAlertOptions?: {
+    newCourses: boolean;
+    teeTimeChanges: boolean;
+    costChanges: boolean;
+  }
+  isEditMode?: boolean
 }
 
 const ResultsContainer = styled.div`
@@ -32,60 +40,82 @@ const ResultsContainer = styled.div`
 
 const CourseCard = styled.div`
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  padding: 20px 24px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
   margin-bottom: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+`
+
+const CourseImage = styled.img`
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+`
+
+const CourseCardBody = styled.div`
+  padding: 16px 20px 18px;
   display: flex;
   flex-direction: column;
   gap: 2px;
 `
 
 const CourseTitle = styled.div`
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 600;
+  line-height: 1.3;
 `
 
 const CourseLocation = styled.div`
   color: #888;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  margin-bottom: 2px;
 `
 
 const CourseDetails = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 1rem;
-  margin-top: 8px;
+  gap: 6px;
+  font-size: 0.95rem;
+  margin-top: 10px;
 `
 
 const DetailsRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
   flex-wrap: wrap;
   justify-content: space-between;
 `
 
 const Price = styled.span`
-  font-weight: 500;
+  font-weight: 600;
+  color: #4a7c10;
 `
 
 const Rating = styled.span`
-  margin-left: auto;
   display: flex;
   align-items: center;
   font-weight: 500;
+  color: #555;
 `
 
 const Star = styled.span`
   color: #f7b500;
-  font-size: 1.1em;
-  margin-right: 2px;
+  font-size: 1em;
+  margin-right: 3px;
+`
+
+const MetaText = styled.span`
+  color: #666;
+  font-size: 0.9rem;
 `
 
 const AlertOptionsContainer = styled.div`
   margin: 24px 0 8px 0;
+  max-width: 256px;
 `
 
 const AlertOptionsLabel = styled.div`
@@ -100,21 +130,12 @@ const AlertOptionsList = styled.div`
   margin-top: 8px;
 `
 
-const AlertCheckboxLabel = styled.label`
+const ToggleRow = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
   font-size: 1rem;
-  padding: 4px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.2s;
-  input[type="checkbox"] {
-    width: 22px;
-    height: 22px;
-    margin-right: 14px;
-    accent-color: #768f13;
-  }
+  padding: 4px 0;
 `
 
 const ErrorMsg = styled.div`
@@ -134,11 +155,11 @@ function formatTime(time: string) {
   return `${hour}${min !== 0 ? ":" + minStr : ""}${ampm}`;
 }
 
-export const SearchResults: React.FC<ResultsProps> = ({ courses, onBack, onCreateAlert, processing }) => {
+export const SearchResults: React.FC<ResultsProps> = ({ courses, onBack, onCreateAlert, processing, initialAlertOptions, isEditMode }) => {
   const [alertOptions, setAlertOptions] = React.useState({
-    newCourses: false,
-    teeTimeChanges: false,
-    costChanges: false,
+    newCourses: initialAlertOptions?.newCourses ?? false,
+    teeTimeChanges: initialAlertOptions?.teeTimeChanges ?? false,
+    costChanges: initialAlertOptions?.costChanges ?? false,
   })
   const [optionsError, setOptionsError] = React.useState<string | null>(null)
 
@@ -153,65 +174,57 @@ export const SearchResults: React.FC<ResultsProps> = ({ courses, onBack, onCreat
 
   return (
     <ResultsContainer>
-      <h3>Search Results</h3>
-      {courses.length === 0 ? (
-        <div>No courses found.</div>
-      ) : (
-        courses.map(course => (
-          <CourseCard key={course.id}>
-            <CourseTitle>{course.name}</CourseTitle>
-            <CourseLocation>{course.location}</CourseLocation>
-            <CourseDetails>
-              <DetailsRow>
-                <Price>${course.priceMin.toFixed(2)}</Price>
-                <Rating><Star>★</Star>{course.averageRating.toFixed(2)}</Rating>
-              </DetailsRow>
-              <DetailsRow>
-                <span>{course.teeTimes} tee times</span>
-                <span>
-                  {formatTime(course.startTimeMin)}
-                  {course.startTimeMin !== course.startTimeMax ? ` - ${formatTime(course.startTimeMax)}` : ""}
-                </span>
-              </DetailsRow>
-            </CourseDetails>
-          </CourseCard>
-        ))
-      )}
-      <AlertOptionsContainer>
+      <Container>
         <AlertOptionsLabel>Alert Options</AlertOptionsLabel>
-        <AlertOptionsList>
-          <AlertCheckboxLabel>
-            <input
-              type="checkbox"
-              checked={alertOptions.newCourses}
-              onChange={e => setAlertOptions(opts => ({ ...opts, newCourses: e.target.checked }))}
-              title="New Courses Found"
-            />
-            New Courses
-          </AlertCheckboxLabel>
-          <AlertCheckboxLabel>
-            <input
-              type="checkbox"
-              checked={alertOptions.teeTimeChanges}
-              onChange={e => setAlertOptions(opts => ({ ...opts, teeTimeChanges: e.target.checked }))}
-              title="Tee Time Changes"
-            />
-            Tee Time Changes
-          </AlertCheckboxLabel>
-          <AlertCheckboxLabel>
-            <input
-              type="checkbox"
-              checked={alertOptions.costChanges}
-              onChange={e => setAlertOptions(opts => ({ ...opts, costChanges: e.target.checked }))}
-              title="Cost Changes"
-            />
-            Cost Changes
-          </AlertCheckboxLabel>
-        </AlertOptionsList>
+        <Container width={200}>
+          <AlertOptionsList>
+            <ToggleRow>
+              <span>New Courses</span>
+              <Switch checked={alertOptions.newCourses} onChange={v => setAlertOptions(opts => ({ ...opts, newCourses: v }))} />
+            </ToggleRow>
+            <ToggleRow>
+              <span>Tee Time Changes</span>
+              <Switch checked={alertOptions.teeTimeChanges} onChange={v => setAlertOptions(opts => ({ ...opts, teeTimeChanges: v }))} />
+            </ToggleRow>
+            <ToggleRow>
+              <span>Cost Changes</span>
+              <Switch checked={alertOptions.costChanges} onChange={v => setAlertOptions(opts => ({ ...opts, costChanges: v }))} />
+            </ToggleRow>
+          </AlertOptionsList>
+        </Container>
         {optionsError && <ErrorMsg>{optionsError}</ErrorMsg>}
-      </AlertOptionsContainer>
-      <Button onClick={onBack} size="large" style={{ marginTop: 16, marginRight: 8 }}>Back to Search</Button>
-      <Button type="primary" size="large" onClick={handleCreateClick} style={{ marginTop: 16 }} loading={processing}>Create Alert</Button>
+      </Container>
+      <Button onClick={onBack} size="large" style={{ marginBottom: 16, marginRight: 8 }}>Back to Search</Button>
+      <Button type="primary" size="large" onClick={handleCreateClick} style={{ marginBottom: 16 }} loading={processing}>{isEditMode ? "Update Alert" : "Create Alert"}</Button>
+      <Container size={20}>
+        <h3>Search Results</h3>
+        {courses.length === 0 ? (
+          <div>No courses found.</div>
+        ) : (
+          courses.filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i).map(course => (
+            <CourseCard key={course.id}>
+              {course.imageURL && <CourseImage src={course.imageURL} alt={course.name} />}
+              <CourseCardBody>
+                <CourseTitle>{course.name}</CourseTitle>
+                <CourseLocation>{course.location}</CourseLocation>
+                <CourseDetails>
+                  <DetailsRow>
+                    <Price>From ${course.priceMin.toFixed(2)}</Price>
+                    <Rating><Star>★</Star>{course.averageRating.toFixed(1)}</Rating>
+                  </DetailsRow>
+                  <DetailsRow>
+                    <MetaText>{course.teeTimes} tee times</MetaText>
+                    <MetaText>
+                      {formatTime(course.startTimeMin)}
+                      {course.startTimeMin !== course.startTimeMax ? ` – ${formatTime(course.startTimeMax)}` : ""}
+                    </MetaText>
+                  </DetailsRow>
+                </CourseDetails>
+              </CourseCardBody>
+            </CourseCard>
+          ))
+        )}
+      </Container>
     </ResultsContainer>
   )
 }

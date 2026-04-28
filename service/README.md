@@ -153,6 +153,88 @@ Delete an existing tee time alert.
 
 ---
 
+### Get Alert
+**GET** `/opentee/alert/{alertId}`
+
+🔒 **Requires Authentication**
+
+Retrieve a single alert by ID. Returns 403 if the alert belongs to another user.
+
+**Path Parameters**
+- `alertId` (string, required): The alert ID to retrieve
+
+**Response**
+```json
+{
+  "alertId": "1234567890",
+  "alertUser": "jsmith",
+  "alertEmail": "jsmith@example.com",
+  "alertOptions": {
+    "newCourses": true,
+    "teeTimeChanges": true,
+    "costChanges": false
+  },
+  "teeTimeSearch": {
+    "date": "2026-01-20",
+    "zipCode": "94105",
+    "radius": 25,
+    "holes": 18,
+    "players": 2,
+    "dealsOnly": false,
+    "priceMin": 0,
+    "priceMax": 150,
+    "startHourMin": 8,
+    "startHourMax": 16,
+    "ratingMin": 3.5,
+    "nameContains": []
+  }
+}
+```
+
+---
+
+### List Alerts
+**GET** `/opentee/alerts`
+
+🔒 **Requires Authentication**
+
+Retrieve all alerts for the authenticated user.
+
+**Response**
+```json
+{
+  "alerts": [
+    {
+      "alertId": "1234567890",
+      "alertUser": "jsmith",
+      "alertEmail": "jsmith@example.com",
+      "alertOptions": {
+        "newCourses": true,
+        "teeTimeChanges": true,
+        "costChanges": false
+      },
+      "teeTimeSearch": {
+        "date": "2026-01-20",
+        "zipCode": "94105",
+        "radius": 25,
+        "holes": 18,
+        "players": 2,
+        "dealsOnly": false,
+        "priceMin": 0,
+        "priceMax": 150,
+        "startHourMin": 8,
+        "startHourMax": 16,
+        "ratingMin": 3.5,
+        "nameContains": []
+      }
+    }
+  ],
+  "count": 1
+}
+```
+
+---
+
 ### Get Account Info
 **POST** `/opentee/account`
 
@@ -186,6 +268,20 @@ All endpoints may return the following error responses:
 ```json
 {
   "error": "authentication error message"
+}
+```
+
+**403 Forbidden**
+```json
+{
+  "error": "alert belongs to another user"
+}
+```
+
+**404 Not Found**
+```json
+{
+  "error": "alert not found"
 }
 ```
 

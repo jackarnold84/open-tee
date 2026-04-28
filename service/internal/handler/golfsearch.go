@@ -39,6 +39,7 @@ type Course struct {
 	StartTimeMin  string  `json:"startTimeMin"`
 	StartTimeMax  string  `json:"startTimeMax"`
 	AverageRating float64 `json:"averageRating"`
+	ImageURL      string  `json:"imageURL" dynamodbav:"imageURL"`
 }
 
 func TeeTimeSearch(req TeeTimeSearchRequest) (TeeTimeSearchResponse, error) {
@@ -87,7 +88,12 @@ func TeeTimeSearch(req TeeTimeSearchRequest) (TeeTimeSearchResponse, error) {
 	}
 
 	res.Courses = make([]Course, 0, len(gnResp))
+	seen := make(map[int]bool)
 	for _, facility := range gnResp {
+		if seen[facility.ID] {
+			continue
+		}
+		seen[facility.ID] = true
 		if facility.AverageRating < req.RatingMin {
 			continue
 		}
@@ -100,10 +106,11 @@ func TeeTimeSearch(req TeeTimeSearchRequest) (TeeTimeSearchResponse, error) {
 			Name:          facility.Name,
 			Location:      fmt.Sprintf("%s, %s", facility.Address.City, facility.Address.StateProvinceCode),
 			TeeTimes:      facility.NumberOfTeeTimes,
-			PriceMin:      math.Round(facility.MinPrice*100) / 100,
-			StartTimeMin:  extractTime(facility.MinDate),
-			StartTimeMax:  extractTime(facility.MaxDate),
+			PriceMin:      math.Round(facility.MinPrice.Value*100) / 100,
+			StartTimeMin:  extractTime(facility.MinDate.Date),
+			StartTimeMax:  extractTime(facility.MaxDate.Date),
 			AverageRating: math.Round(facility.AverageRating*100) / 100,
+			ImageURL:      facility.ThumbnailImagePath,
 		}
 		res.Courses = append(res.Courses, course)
 		res.TotalTeeTimes += facility.NumberOfTeeTimes
@@ -134,11 +141,11 @@ func formatDate(dateStr string) string {
 }
 
 func extractTime(datetime string) string {
-	t, err := time.Parse("2006-01-02T15:04:05", datetime)
+	t, err := time.Parse(time.RFC3339, datetime)
 	if err != nil {
 		return ""
 	}
-	return t.Format("15:04")
+	return t.UTC().Format("15:04")
 }
 
 func nameContains(courseName string, terms []string) bool {

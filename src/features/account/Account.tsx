@@ -2,6 +2,7 @@ import { Button, Typography } from "antd"
 import React from "react"
 import Container from "../../components/Container"
 import { useAuth } from "../layout/AuthProvider"
+import AlertsList from "./AlertsList"
 
 const { Title, Text } = Typography
 
@@ -24,6 +25,7 @@ const Account: React.FC = () => {
           Sign out
         </Button>
       </Container>
+      <AlertsList />
     </Container>
   )
 }

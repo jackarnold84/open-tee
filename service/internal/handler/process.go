@@ -118,7 +118,7 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 			})
 		}
 
-		if math.Abs(currCourse.PriceMin-prevCourse.PriceMin) > 0.50 {
+		if math.Abs(currCourse.PriceMin-prevCourse.PriceMin) > 0.05*currCourse.PriceMin {
 			changes.CostChanges = append(changes.CostChanges, CourseChange{
 				Prev:    prevCourse,
 				Current: currCourse,
@@ -134,16 +134,21 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 		}
 	}
 
-	// only alert for new courses not already alerted
+	// only alert for new courses not already alerted (skip for alerts with course name filters)
 	newCoursesToAlert := make([]Course, 0, len(changes.NewCourses))
-	alreadyAlertedSet := make(map[int]bool, len(item.NewCourseAlerted))
-	for _, id := range item.NewCourseAlerted {
-		alreadyAlertedSet[id] = true
-	}
-	for _, course := range changes.NewCourses {
-		if !alreadyAlertedSet[course.ID] {
-			newCoursesToAlert = append(newCoursesToAlert, course)
+	hasNameFilter := len(item.TeeTimeSearch.NameContains) > 0
+	if !hasNameFilter {
+		alreadyAlertedSet := make(map[int]bool, len(item.NewCourseAlerted))
+		for _, id := range item.NewCourseAlerted {
+			alreadyAlertedSet[id] = true
 		}
+		for _, course := range changes.NewCourses {
+			if !alreadyAlertedSet[course.ID] {
+				newCoursesToAlert = append(newCoursesToAlert, course)
+			}
+		}
+	} else {
+		newCoursesToAlert = changes.NewCourses
 	}
 	changes.NewCourses = newCoursesToAlert
 
@@ -157,9 +162,15 @@ func processAlertItem(ctx context.Context, item AlertItem) (string, error) {
 		notified = true
 
 		// update NewCourseAlerted
-		for _, course := range changes.NewCourses {
-			if _, included := alreadyAlertedSet[course.ID]; !included {
-				item.NewCourseAlerted = append(item.NewCourseAlerted, course.ID)
+		if !hasNameFilter {
+			alreadyAlertedSet := make(map[int]bool, len(item.NewCourseAlerted))
+			for _, id := range item.NewCourseAlerted {
+				alreadyAlertedSet[id] = true
+			}
+			for _, course := range changes.NewCourses {
+				if _, included := alreadyAlertedSet[course.ID]; !included {
+					item.NewCourseAlerted = append(item.NewCourseAlerted, course.ID)
+				}
 			}
 		}
 	}
@@ -187,7 +198,7 @@ func sendNotification(ctx context.Context, alert AlertItem, changes SearchChange
 	email := ses.Email{
 		FromAddress: sourceEmail,
 		ToAddress:   alert.AlertEmail,
-		Subject:     "OpenTee - " + title,
+		Subject:     title,
 		Body:        emailBody,
 	}
 	if err := email.Send(ctx); err != nil {
@@ -207,18 +218,112 @@ func generateAlertTitle(alert AlertItem, changes SearchChanges) string {
 		formattedDate = parsedDate.Format("Mon Jan 2")
 	}
 
-	var changeType string
+	eventType := determineEventType(alert, changes)
+	courseName := getCourseNameForAlert(alert, changes)
+
+	return fmt.Sprintf("%s - %s (%s) - OpenTee", courseName, eventType, formattedDate)
+}
+
+// getCourseNameForAlert returns the formatted course name(s) for the alert
+func getCourseNameForAlert(alert AlertItem, changes SearchChanges) string {
+	hasNameFilter := len(alert.TeeTimeSearch.NameContains) > 0
+
 	if len(changes.NewCourses) > 0 {
-		changeType = "New Courses"
-	} else if len(changes.TeeTimeChanges) > 0 {
-		changeType = "Tee Time Changes"
-	} else if len(changes.CostChanges) > 0 {
-		changeType = "Cost Changes"
-	} else {
-		changeType = "Update"
+		courses := changes.NewCourses
+		return formatCourseNames(courses)
+	}
+	if len(changes.TeeTimeChanges) > 0 {
+		courses := make([]Course, len(changes.TeeTimeChanges))
+		for i, tc := range changes.TeeTimeChanges {
+			if tc.Current.Name != "" {
+				courses[i] = tc.Current
+			} else {
+				courses[i] = tc.Prev
+			}
+		}
+		return formatCourseNames(courses)
+	}
+	if len(changes.CostChanges) > 0 {
+		courses := make([]Course, len(changes.CostChanges))
+		for i, cc := range changes.CostChanges {
+			courses[i] = cc.Current
+		}
+		return formatCourseNames(courses)
 	}
 
-	return fmt.Sprintf("%s - %s", formattedDate, changeType)
+	if hasNameFilter && len(alert.TeeTimeSearch.NameContains) > 0 {
+		name := alert.TeeTimeSearch.NameContains[0]
+		words := strings.Fields(name)
+		if len(words) == 0 {
+			return name
+		}
+		if len(words) == 1 {
+			return words[0]
+		}
+		return words[0] + " " + words[1]
+	}
+
+	return "Update"
+}
+
+// formatCourseNames formats a slice of courses for the subject line
+// Returns first two words of first course, +X for additional courses
+func formatCourseNames(courses []Course) string {
+	if len(courses) == 0 {
+		return ""
+	}
+	name := courses[0].Name
+	words := strings.Fields(name)
+	var firstCourse string
+	if len(words) == 0 {
+		firstCourse = name
+	} else if len(words) == 1 {
+		firstCourse = words[0]
+	} else {
+		firstCourse = words[0] + " " + words[1]
+	}
+	if len(courses) == 1 {
+		return firstCourse
+	}
+	return fmt.Sprintf("%s +%d", firstCourse, len(courses)-1)
+}
+
+// determineEventType returns the event type string based on changes and alert options
+func determineEventType(alert AlertItem, changes SearchChanges) string {
+	hasNameFilter := len(alert.TeeTimeSearch.NameContains) > 0
+
+	if len(changes.NewCourses) > 0 && alert.AlertOptions.NewCourses {
+		if !hasNameFilter {
+			return "New Courses"
+		}
+		return "Available"
+	}
+
+	if len(changes.TeeTimeChanges) > 0 && alert.AlertOptions.TeeTimeChanges {
+		for _, tc := range changes.TeeTimeChanges {
+			prevTimes := tc.Prev.TeeTimes
+			currTimes := tc.Current.TeeTimes
+
+			// Check for unavailable (dropped to zero)
+			if currTimes == 0 && prevTimes > 0 {
+				return "Unavailable"
+			}
+			// Check for added (increased)
+			if currTimes > prevTimes {
+				return "Tee Time Added"
+			}
+			// Check for reduced (decreased but not zero)
+			if currTimes < prevTimes && currTimes > 0 {
+				return "Tee Time Reduced"
+			}
+		}
+	}
+
+	if len(changes.CostChanges) > 0 && alert.AlertOptions.CostChanges {
+		return "Cost Change"
+	}
+
+	return "Update"
 }
 
 func generateNotificationBody(alert AlertItem, changes SearchChanges) (string, error) {

@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 const (
@@ -65,6 +66,21 @@ func (t Table) ScanItems(ctx context.Context, limit int, out any) error {
 		TableName:      aws.String(t.TableName),
 		ConsistentRead: aws.Bool(t.ConsistentRead),
 		Limit:          aws.Int32(int32(limit)),
+	}
+	result, err := dynamoClient.Scan(ctx, input)
+	if err != nil {
+		return err
+	}
+	return attributevalue.UnmarshalListOfMaps(result.Items, out)
+}
+
+func (t Table) ScanItemsWithFilter(ctx context.Context, filterAttr, filterValue string, out any) error {
+	input := &dynamodb.ScanInput{
+		TableName:                 aws.String(t.TableName),
+		ConsistentRead:            aws.Bool(t.ConsistentRead),
+		FilterExpression:          aws.String("#attr = :val"),
+		ExpressionAttributeNames:  map[string]string{"#attr": filterAttr},
+		ExpressionAttributeValues: map[string]types.AttributeValue{":val": &types.AttributeValueMemberS{Value: filterValue}},
 	}
 	result, err := dynamoClient.Scan(ctx, input)
 	if err != nil {

@@ -75,6 +75,26 @@ Resources:
           Properties:
             Method: OPTIONS
             Path: /opentee/account
+        GetAlert:
+          Type: Api
+          Properties:
+            Method: GET
+            Path: /opentee/alert/{alertId}
+        GetAlertOptions:
+          Type: Api
+          Properties:
+            Method: OPTIONS
+            Path: /opentee/alert/{alertId}
+        ListAlerts:
+          Type: Api
+          Properties:
+            Method: GET
+            Path: /opentee/alerts
+        ListAlertsOptions:
+          Type: Api
+          Properties:
+            Method: OPTIONS
+            Path: /opentee/alerts
       Policies:
         - Statement:
             - Sid: DynamoAccess
@@ -82,6 +102,8 @@ Resources:
               Action:
                 - dynamodb:PutItem
                 - dynamodb:DeleteItem
+                - dynamodb:GetItem
+                - dynamodb:Scan
               Resource: !GetAtt OpenTeeTable.Arn
             - Sid: EmailAccess
               Effect: Allow

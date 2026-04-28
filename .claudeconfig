@@ -1,0 +1,12 @@
+{
+    "blockedPaths": [
+        "~/.ssh",
+        "~/.aws",
+        "~/.config",
+        "**/node_modules",
+        "**/.git/config",
+        "**/secrets",
+        "**/.env*"
+    ],
+    "maxFileSize": "10MB"
+}

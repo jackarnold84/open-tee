@@ -36,6 +36,7 @@ vendor/
 .vscode/
 .dev/
 .github/
+.claude/settings.local.json
 
 # credentials
 service/internal/env/accounts.json
