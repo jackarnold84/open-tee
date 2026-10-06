@@ -20,6 +20,7 @@ type Email struct {
 	ToAddress   string
 	Subject     string
 	Body        string
+	TextBody    string
 }
 
 var sesClient = newClient()
@@ -30,6 +31,10 @@ func newClient() *sesv2.Client {
 }
 
 func (e Email) Send(ctx context.Context) error {
+	textBody := e.TextBody
+	if textBody == "" {
+		textBody = e.Body
+	}
 	_, err := sesClient.SendEmail(ctx, &sesv2.SendEmailInput{
 		FromEmailAddress: aws.String(e.FromAddress),
 		Destination: &types.Destination{
@@ -45,7 +50,7 @@ func (e Email) Send(ctx context.Context) error {
 						Data: aws.String(e.Body),
 					},
 					Text: &types.Content{
-						Data: aws.String(e.Body),
+						Data: aws.String(textBody),
 					},
 				},
 			},

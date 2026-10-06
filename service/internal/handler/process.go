@@ -4,12 +4,13 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"html/template"
 	"log"
 	"math"
+	"net/url"
 	"opentee/common/ses"
 	"strings"
 	"time"
+	"unicode"
 )
 
 const (
@@ -37,6 +38,24 @@ type SearchChanges struct {
 type CourseChange struct {
 	Prev    Course
 	Current Course
+}
+
+type notificationCourse struct {
+	Course       Course
+	ImageURL     string
+	Link         string
+	Availability string
+	TimeRange    string
+	Price        string
+	Changes      []string
+}
+
+type notificationData struct {
+	Date        string
+	SearchLines []string
+	Courses     []notificationCourse
+	EditURL     string
+	DeleteURL   string
 }
 
 //go:embed alert_email.tmpl.html
@@ -194,12 +213,14 @@ func sendNotification(ctx context.Context, alert AlertItem, changes SearchChange
 	if err != nil {
 		return fmt.Errorf("failed to generate email body: %w", err)
 	}
+	textBody := generateNotificationTextBody(alert, changes)
 
 	email := ses.Email{
 		FromAddress: sourceEmail,
 		ToAddress:   alert.AlertEmail,
 		Subject:     title,
 		Body:        emailBody,
+		TextBody:    textBody,
 	}
 	if err := email.Send(ctx); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
@@ -327,55 +348,208 @@ func determineEventType(alert AlertItem, changes SearchChanges) string {
 }
 
 func generateNotificationBody(alert AlertItem, changes SearchChanges) (string, error) {
-	title := generateAlertTitle(alert, changes)
 	tmplBytes, err := alertEmailTmplFS.ReadFile("alert_email.tmpl.html")
 	if err != nil {
 		return "", fmt.Errorf("failed to read email template: %w", err)
 	}
-	data := struct {
-		Alert   AlertItem
-		Changes SearchChanges
-		Title   string
-	}{
-		Alert:   alert,
-		Changes: changes,
-		Title:   title,
-	}
-
-	funcs := template.FuncMap{
-		"ampm": func(s string) string {
-			if s == "" {
-				return ""
-			}
-			t, err := time.Parse("15:04", s)
-			if err != nil {
-				return s
-			}
-			return t.Format("3:04pm")
-		},
-		"hourAmpm": func(h int) string {
-			if h < 0 || h > 23 {
-				return ""
-			}
-			return time.Date(2000, 1, 1, h, 0, 0, 0, time.UTC).Format("3:04pm")
-		},
-		"titleCase": func(s string) string {
-			return titleCaseWords(s)
-		},
-		"joinTitleCase": func(arr []string) string {
-			result := make([]string, len(arr))
-			for i, s := range arr {
-				result[i] = titleCaseWords(s)
-			}
-			return strings.Join(result, ", ")
-		},
-	}
-
-	htmlBody, err := ses.HtmlTemplate(string(tmplBytes), data, funcs)
+	htmlBody, err := ses.HtmlTemplate(string(tmplBytes), buildNotificationData(alert, changes), nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate email body: %w", err)
 	}
 	return htmlBody, nil
+}
+
+func generateNotificationTextBody(alert AlertItem, changes SearchChanges) string {
+	data := buildNotificationData(alert, changes)
+	var body strings.Builder
+	fmt.Fprintf(&body, "OpenTee alert for %s\n\n", data.Date)
+	for _, course := range data.Courses {
+		fmt.Fprintf(&body, "%s — %s\n%s", course.Course.Name, course.Course.Location, course.Availability)
+		if course.TimeRange != "" {
+			fmt.Fprintf(&body, " · %s", course.TimeRange)
+		}
+		if course.Price != "" {
+			fmt.Fprintf(&body, " · %s", course.Price)
+		}
+		body.WriteString("\n")
+		for _, change := range course.Changes {
+			fmt.Fprintf(&body, "%s\n", change)
+		}
+		if course.Link != "" {
+			fmt.Fprintf(&body, "View tee times: %s\n", course.Link)
+		}
+		body.WriteString("\n")
+	}
+	body.WriteString("Your search\n")
+	for _, line := range data.SearchLines {
+		fmt.Fprintf(&body, "%s\n", line)
+	}
+	fmt.Fprintf(&body, "\nEdit alert: %s\nDelete alert: %s\n", data.EditURL, data.DeleteURL)
+	return body.String()
+}
+
+func buildNotificationData(alert AlertItem, changes SearchChanges) notificationData {
+	date := alert.TeeTimeSearch.Date
+	if parsed, err := time.Parse("2006-01-02", date); err == nil {
+		date = parsed.Format("Monday, January 2")
+	}
+	search := alert.TeeTimeSearch
+	lines := []string{
+		fmt.Sprintf("%s · %d miles from %s", date, search.Radius, search.ZipCode),
+	}
+	var format []string
+	if search.Holes > 0 {
+		format = append(format, fmt.Sprintf("%d holes", search.Holes))
+	}
+	if search.Players > 0 {
+		format = append(format, fmt.Sprintf("%d players", search.Players))
+	}
+	if len(format) > 0 {
+		lines = append(lines, strings.Join(format, " · "))
+	}
+	lines = append(lines, fmt.Sprintf("%s–%s", formatHour(search.StartHourMin), formatHour(search.StartHourMax)))
+	if search.PriceMin > 0 || search.PriceMax > 0 {
+		if search.PriceMax > 0 {
+			lines = append(lines, fmt.Sprintf("$%d–$%d", search.PriceMin, search.PriceMax))
+		} else {
+			lines = append(lines, fmt.Sprintf("From $%d", search.PriceMin))
+		}
+	}
+	if search.DealsOnly {
+		lines = append(lines, "Hot deals only")
+	}
+	if len(search.NameContains) > 0 {
+		lines = append(lines, "Course filter: "+strings.Join(search.NameContains, ", "))
+	}
+
+	data := notificationData{
+		Date:        date,
+		SearchLines: lines,
+		EditURL:     "https://jackarnold84.github.io/open-tee/create/?edit=" + url.QueryEscape(alert.AlertID),
+		DeleteURL:   "https://jackarnold84.github.io/open-tee/delete?alertId=" + url.QueryEscape(alert.AlertID),
+	}
+	byID := make(map[int]int)
+	add := func(course Course, change string) {
+		if index, ok := byID[course.ID]; ok {
+			data.Courses[index].Changes = append(data.Courses[index].Changes, change)
+			if data.Courses[index].Course.TeeTimes == 0 && course.TeeTimes > 0 {
+				data.Courses[index].Course = course
+				data.Courses[index].ImageURL = safeImageURL(course.ImageURL)
+				data.Courses[index].Link = courseLink(course)
+				data.Courses[index].Availability = teeTimeCount(course.TeeTimes)
+				data.Courses[index].TimeRange = courseTimeRange(course)
+				data.Courses[index].Price = fmt.Sprintf("From $%.2f", course.PriceMin)
+			}
+			return
+		}
+		item := notificationCourse{
+			Course:       course,
+			ImageURL:     safeImageURL(course.ImageURL),
+			Link:         courseLink(course),
+			Availability: teeTimeCount(course.TeeTimes),
+			Changes:      []string{change},
+		}
+		if course.TeeTimes > 0 {
+			item.TimeRange = courseTimeRange(course)
+			item.Price = fmt.Sprintf("From $%.2f", course.PriceMin)
+		}
+		byID[course.ID] = len(data.Courses)
+		data.Courses = append(data.Courses, item)
+	}
+	if alert.AlertOptions.NewCourses {
+		for _, course := range changes.NewCourses {
+			add(course, "New in your search")
+		}
+	}
+	if alert.AlertOptions.TeeTimeChanges {
+		for _, change := range changes.TeeTimeChanges {
+			course := change.Current
+			if course.ID == 0 {
+				course = change.Prev
+				course.TeeTimes = 0
+				course.PriceMin = 0
+				course.StartTimeMin = ""
+				course.StartTimeMax = ""
+			}
+			add(course, fmt.Sprintf("Tee times: %d → %d", change.Prev.TeeTimes, change.Current.TeeTimes))
+		}
+	}
+	if alert.AlertOptions.CostChanges {
+		for _, change := range changes.CostChanges {
+			add(change.Current, fmt.Sprintf("Price: $%.2f → $%.2f", change.Prev.PriceMin, change.Current.PriceMin))
+		}
+	}
+	return data
+}
+
+func teeTimeCount(count int) string {
+	if count <= 0 {
+		return "No tee times currently available"
+	}
+	if count == 1 {
+		return "1 tee time"
+	}
+	return fmt.Sprintf("%d tee times", count)
+}
+
+func courseTimeRange(course Course) string {
+	start, end := formatClock(course.StartTimeMin), formatClock(course.StartTimeMax)
+	if start == "" {
+		return end
+	}
+	if end == "" || start == end {
+		return start
+	}
+	return start + "–" + end
+}
+
+func formatClock(value string) string {
+	clock, err := time.Parse("15:04", value)
+	if err != nil {
+		return ""
+	}
+	return clock.Format("3:04pm")
+}
+
+func formatHour(hour int) string {
+	if hour < 0 || hour > 23 {
+		return ""
+	}
+	return time.Date(2000, 1, 1, hour, 0, 0, 0, time.UTC).Format("3pm")
+}
+
+func safeImageURL(raw string) string {
+	parsed, err := url.Parse(strings.TrimSpace(raw))
+	if err != nil || parsed.Scheme != "https" || parsed.Host == "" || parsed.User != nil {
+		return ""
+	}
+	return parsed.String()
+}
+
+func courseLink(course Course) string {
+	if course.ID <= 0 {
+		return ""
+	}
+	var slug strings.Builder
+	lastDash := false
+	for _, char := range strings.ToLower(course.Name) {
+		if char >= 'a' && char <= 'z' || char >= '0' && char <= '9' {
+			slug.WriteRune(char)
+			lastDash = false
+		} else if char == '\'' || char == '’' {
+			continue
+		} else if unicode.IsSpace(char) || unicode.IsPunct(char) || unicode.IsSymbol(char) {
+			if slug.Len() > 0 && !lastDash {
+				slug.WriteByte('-')
+				lastDash = true
+			}
+		}
+	}
+	name := strings.TrimSuffix(slug.String(), "-")
+	if name == "" {
+		return ""
+	}
+	return fmt.Sprintf("https://www.golfnow.com/tee-times/facility/%d-%s/search", course.ID, name)
 }
 
 func SendErrorNotification(ctx context.Context, message string) error {
@@ -385,6 +559,7 @@ func SendErrorNotification(ctx context.Context, message string) error {
 		ToAddress:   targetEmail,
 		Subject:     "OpenTee - Alert Processing Error",
 		Body:        emailBody,
+		TextBody:    emailBody,
 	}
 	if err := email.Send(ctx); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
