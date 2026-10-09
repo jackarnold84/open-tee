@@ -1,162 +1,73 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenTee Alert</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0 8px;
-            background: #f9f9f9;
-        }
-
-        .section {
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-            margin: 16px 0;
-            padding: 16px;
-        }
-
-        .course-title {
-            font-size: 1.1em;
-            font-weight: bold;
-            margin-bottom: 2px;
-        }
-
-        .course-location {
-            color: #666;
-            font-size: 0.98em;
-        }
-
-        .course-detail {
-            margin-bottom: 2px;
-        }
-
-        .label {
-            font-weight: bold;
-        }
-
-        .search-summary {
-            margin-bottom: 18px;
-        }
-
-        .alert-links {
-            margin: 32px 0 0 0;
-            text-align: center;
-        }
-
-        .alert-link-create {
-            display: inline-block;
-            margin-right: 32px;
-            text-decoration: none;
-            color: #768f13;
-            font-weight: bold;
-        }
-
-        .alert-link-delete {
-            display: inline-block;
-            margin-left: 32px;
-            text-decoration: none;
-            color: #d32f2f;
-            font-weight: bold;
-        }
-
-        @media (max-width: 600px) {
-            .section {
-                padding: 10px;
-            }
-
-            body {
-                padding: 0 2px;
-            }
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>OpenTee alert</title>
 </head>
-
-<body>
-    <h2>OpenTee Alert</h2>
-    <h3>{{.Title}}</h3>
-
-    {{if .Alert.AlertOptions.NewCourses}}
-    {{if .Changes.NewCourses}}
-    <h3>New Courses</h3>
-    {{range .Changes.NewCourses}}
-    <div class="section">
-        <div class="course-title">{{.Name}}</div>
-        <div class="course-location">{{.Location}}</div>
-    <div class="course-detail">{{.TeeTimes}} tee times ({{ampm .StartTimeMin}} - {{ampm .StartTimeMax}})</div>
-        <div class="course-detail">${{printf "%.2f" .PriceMin}}</div>
-    </div>
-    {{end}}
-    {{end}}
-    {{end}}
-
-    {{if .Alert.AlertOptions.TeeTimeChanges}}
-    {{if .Changes.TeeTimeChanges}}
-    <h3>Tee Time Changes</h3>
-    {{range .Changes.TeeTimeChanges}}
-    <div class="section">
-        <div class="course-title">{{.Prev.Name}}</div>
-        <div class="course-location">{{.Prev.Location}}</div>
-        <div class="course-detail">{{.Current.TeeTimes}} tee times ({{ampm .Current.StartTimeMin}} -
-            {{ampm .Current.StartTimeMax}})</div>
-        <div class="course-detail">${{printf "%.2f" .Current.PriceMin}}</div>
-        <div class="course-detail"><span class="label">Change:</span> Available tee times changed from
-            {{.Prev.TeeTimes}} to
-            {{.Current.TeeTimes}}</div>
-    </div>
-    {{end}}
-    {{end}}
-    {{end}}
-
-    {{if .Alert.AlertOptions.CostChanges}}
-    {{if .Changes.CostChanges}}
-    <h3>Cost Changes</h3>
-    {{range .Changes.CostChanges}}
-    <div class="section">
-        <div class="course-title">{{.Current.Name}}</div>
-        <div class="course-location">{{.Current.Location}}</div>
-        <div class="course-detail">{{.Current.TeeTimes}} tee times ({{ampm .Current.StartTimeMin}} -
-            {{ampm .Current.StartTimeMax}})</div>
-        <div class="course-detail">${{printf "%.2f" .Current.PriceMin}}</div>
-        <div class="course-detail"><span class="label">Change:</span> Price changed from ${{printf "%.2f"
-            .Prev.PriceMin}} to
-            ${{printf "%.2f" .Current.PriceMin}}</div>
-    </div>
-    {{end}}
-    {{end}}
-    {{end}}
-
-    <div class="section search-summary">
-        <div><span class="label">Tee Time Search</span></div>
-        <div><span class="label">Date:</span> {{.Alert.TeeTimeSearch.Date}}</div>
-        <div><span class="label">Zip Code:</span> {{.Alert.TeeTimeSearch.ZipCode}} ({{.Alert.TeeTimeSearch.Radius}} mi
-            radius)
-        </div>
-        <div><span class="label">Format:</span> {{.Alert.TeeTimeSearch.Holes}} holes, {{.Alert.TeeTimeSearch.Players}}
-            players</div>
-        <div><span class="label">Deals Only:</span> {{if .Alert.TeeTimeSearch.DealsOnly}}Yes{{else}}No{{end}}</div>
-        <div><span class="label">Price Range:</span> ${{.Alert.TeeTimeSearch.PriceMin}} -
-            ${{.Alert.TeeTimeSearch.PriceMax}}
-        </div>
-        <div><span class="label">Time Range:</span> {{hourAmpm .Alert.TeeTimeSearch.StartHourMin}} -
-            {{hourAmpm .Alert.TeeTimeSearch.StartHourMax}}
-        </div>
-        {{if gt (len .Alert.TeeTimeSearch.NameContains) 0}}
-        <div><span class="label">Course Filter:</span> {{joinTitleCase .Alert.TeeTimeSearch.NameContains}}</div>
-        {{end}}
-        <div><span class="label">ID:</span> {{.Alert.AlertID}}</div>
-    </div>
-
-    <div class="alert-links">
-        <a href="https://jackarnold84.github.io/open-tee/create/?edit={{.Alert.AlertID}}" class="alert-link-create">Edit Alert</a>
-        <a href="https://jackarnold84.github.io/open-tee/delete?alertId={{.Alert.AlertID}}"
-            class="alert-link-delete">Delete Alert</a>
-    </div>
+<body style="margin:0;padding:0;background-color:#f3f6f1;color:#17251c;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;background-color:#f3f6f1;">
+    <tr>
+      <td align="center" style="padding:16px 12px 24px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;max-width:560px;">
+          <tr>
+            <td style="padding:0 4px 14px;">
+              <div style="font-size:14px;line-height:20px;font-weight:700;letter-spacing:0.02em;color:#287345;">OpenTee</div>
+              <h1 style="margin:5px 0 2px;font-size:23px;line-height:29px;font-weight:700;color:#17251c;">Tee time update</h1>
+              <p style="margin:0;font-size:14px;line-height:20px;color:#56645a;">Your search for {{.Date}} has changed.</p>
+            </td>
+          </tr>
+          {{range .Courses}}
+          <tr>
+            <td style="padding:0 0 8px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:separate;background-color:#ffffff;border:1px solid #dce5dc;border-radius:10px;">
+                <tr>
+                  <td style="padding:14px 14px 0;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+                      <tr>
+                        {{if .ImageURL}}
+                        <td width="64" valign="top" style="width:64px;padding:0 10px 0 0;">
+                          <img src="{{.ImageURL}}" alt="" width="64" height="48" style="display:block;width:64px;height:48px;object-fit:cover;border:0;border-radius:6px;background-color:#e8eee7;">
+                        </td>
+                        {{end}}
+                        <td valign="top" style="padding:0;">
+                          <h2 style="margin:0 0 2px;font-size:17px;line-height:22px;font-weight:700;color:#17251c;">{{.Course.Name}}</h2>
+                          <p style="margin:0;font-size:13px;line-height:18px;color:#66736a;">{{.Course.Location}}</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:8px 14px 14px;">
+                    <p style="margin:0;font-size:14px;line-height:20px;color:#17251c;"><strong>{{.Availability}}</strong>{{if .Price}} &nbsp;·&nbsp; <span style="font-weight:700;color:{{.PriceColor}};">{{.Price}}{{if .PriceTrend}} {{.PriceTrend}}{{end}}</span>{{end}}</p>
+                    {{if .TimeRange}}<p style="margin:2px 0 0;font-size:13px;line-height:19px;color:#56645a;">{{.TimeRange}}</p>{{end}}
+                    {{range .Changes}}<p style="margin:4px 0 0;font-size:13px;line-height:19px;color:#4e5f52;">{{.}}</p>{{end}}
+                    {{if .Link}}<p style="margin:9px 0 0;font-size:14px;line-height:21px;"><a href="{{.Link}}" style="font-weight:700;color:#287345;text-decoration:underline;">View on GolfNow →</a></p>{{end}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          {{end}}
+          <tr>
+            <td style="padding:10px 4px 8px;">
+              <h2 style="margin:0 0 6px;font-size:15px;line-height:21px;color:#17251c;">Your search</h2>
+              {{range .SearchLines}}<p style="margin:0 0 3px;font-size:13px;line-height:19px;color:#56645a;">{{.}}</p>{{end}}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:13px 4px 0;border-top:1px solid #dce5dc;">
+              <a href="{{.EditURL}}" style="font-size:14px;line-height:22px;color:#287345;text-decoration:underline;">Edit alert</a>
+              <span style="padding:0 12px;color:#99a69d;">·</span>
+              <a href="{{.DeleteURL}}" style="font-size:14px;line-height:22px;color:#56645a;text-decoration:underline;">Delete alert</a>
+              <p style="margin:8px 0 0;font-size:12px;line-height:18px;color:#718076;">Prices and availability may change before you book.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
-
 </html>
