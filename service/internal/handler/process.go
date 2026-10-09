@@ -14,9 +14,12 @@ import (
 )
 
 const (
-	processLimit = 10
-	sourceEmail  = "praisedformula5@gmail.com"
-	targetEmail  = "jarno.push@yahoo.com"
+	processLimit           = 10
+	sourceEmail            = "praisedformula5@gmail.com"
+	targetEmail            = "jarno.push@yahoo.com"
+	notificationPriceGreen = "#287345"
+	notificationPriceRed   = "#b66066"
+	notificationPriceBlue  = "#4f7fa7"
 )
 
 type ProcessAlertsResponse struct {
@@ -47,6 +50,8 @@ type notificationCourse struct {
 	Availability string
 	TimeRange    string
 	Price        string
+	PriceColor   string
+	PriceTrend   string
 	Changes      []string
 }
 
@@ -370,13 +375,16 @@ func generateNotificationTextBody(alert AlertItem, changes SearchChanges) string
 		}
 		if course.Price != "" {
 			fmt.Fprintf(&body, " · %s", course.Price)
+			if course.PriceTrend != "" {
+				fmt.Fprintf(&body, " %s", course.PriceTrend)
+			}
 		}
 		body.WriteString("\n")
 		for _, change := range course.Changes {
 			fmt.Fprintf(&body, "%s\n", change)
 		}
 		if course.Link != "" {
-			fmt.Fprintf(&body, "View tee times: %s\n", course.Link)
+			fmt.Fprintf(&body, "View on GolfNow: %s\n", course.Link)
 		}
 		body.WriteString("\n")
 	}
@@ -429,24 +437,29 @@ func buildNotificationData(alert AlertItem, changes SearchChanges) notificationD
 		DeleteURL:   "https://jackarnold84.github.io/open-tee/delete?alertId=" + url.QueryEscape(alert.AlertID),
 	}
 	byID := make(map[int]int)
-	add := func(course Course, change string) {
+	add := func(course Course, change string) int {
 		if index, ok := byID[course.ID]; ok {
 			data.Courses[index].Changes = append(data.Courses[index].Changes, change)
-			if data.Courses[index].Course.TeeTimes == 0 && course.TeeTimes > 0 {
-				data.Courses[index].Course = course
-				data.Courses[index].ImageURL = safeImageURL(course.ImageURL)
-				data.Courses[index].Link = courseLink(course)
-				data.Courses[index].Availability = teeTimeCount(course.TeeTimes)
+			data.Courses[index].Course = course
+			data.Courses[index].ImageURL = safeImageURL(course.ImageURL)
+			data.Courses[index].Link = courseLink(course)
+			data.Courses[index].Availability = teeTimeCount(course.TeeTimes)
+			data.Courses[index].TimeRange = ""
+			data.Courses[index].Price = ""
+			data.Courses[index].PriceColor = notificationPriceGreen
+			data.Courses[index].PriceTrend = ""
+			if course.TeeTimes > 0 {
 				data.Courses[index].TimeRange = courseTimeRange(course)
 				data.Courses[index].Price = fmt.Sprintf("From $%.2f", course.PriceMin)
 			}
-			return
+			return index
 		}
 		item := notificationCourse{
 			Course:       course,
 			ImageURL:     safeImageURL(course.ImageURL),
 			Link:         courseLink(course),
 			Availability: teeTimeCount(course.TeeTimes),
+			PriceColor:   notificationPriceGreen,
 			Changes:      []string{change},
 		}
 		if course.TeeTimes > 0 {
@@ -455,10 +468,12 @@ func buildNotificationData(alert AlertItem, changes SearchChanges) notificationD
 		}
 		byID[course.ID] = len(data.Courses)
 		data.Courses = append(data.Courses, item)
+		return len(data.Courses) - 1
 	}
 	if alert.AlertOptions.NewCourses {
 		for _, course := range changes.NewCourses {
-			add(course, "New in your search")
+			index := add(course, "New in your search")
+			data.Courses[index].PriceColor = notificationPriceBlue
 		}
 	}
 	if alert.AlertOptions.TeeTimeChanges {
@@ -471,12 +486,22 @@ func buildNotificationData(alert AlertItem, changes SearchChanges) notificationD
 				course.StartTimeMin = ""
 				course.StartTimeMax = ""
 			}
-			add(course, fmt.Sprintf("Tee times: %d → %d", change.Prev.TeeTimes, change.Current.TeeTimes))
+			index := add(course, fmt.Sprintf("Tee times: %d → %d", change.Prev.TeeTimes, change.Current.TeeTimes))
+			if change.Current.ID != 0 && change.Current.TeeTimes > change.Prev.TeeTimes {
+				data.Courses[index].PriceColor = notificationPriceBlue
+			}
 		}
 	}
 	if alert.AlertOptions.CostChanges {
 		for _, change := range changes.CostChanges {
-			add(change.Current, fmt.Sprintf("Price: $%.2f → $%.2f", change.Prev.PriceMin, change.Current.PriceMin))
+			index := add(change.Current, fmt.Sprintf("Price: $%.2f → $%.2f", change.Prev.PriceMin, change.Current.PriceMin))
+			if change.Current.PriceMin < change.Prev.PriceMin {
+				data.Courses[index].PriceColor = notificationPriceGreen
+				data.Courses[index].PriceTrend = "↘"
+			} else if change.Current.PriceMin > change.Prev.PriceMin {
+				data.Courses[index].PriceColor = notificationPriceRed
+				data.Courses[index].PriceTrend = "↗"
+			}
 		}
 	}
 	return data

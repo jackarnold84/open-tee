@@ -28,7 +28,7 @@
                       <tr>
                         {{if .ImageURL}}
                         <td width="64" valign="top" style="width:64px;padding:0 10px 0 0;">
-                          <img src="{{.ImageURL}}" alt="" width="64" height="56" style="display:block;width:64px;height:56px;object-fit:cover;border:0;border-radius:6px;background-color:#e8eee7;">
+                          <img src="{{.ImageURL}}" alt="" width="64" height="48" style="display:block;width:64px;height:48px;object-fit:cover;border:0;border-radius:6px;background-color:#e8eee7;">
                         </td>
                         {{end}}
                         <td valign="top" style="padding:0;">
@@ -41,10 +41,10 @@
                 </tr>
                 <tr>
                   <td style="padding:8px 14px 14px;">
-                    <p style="margin:0;font-size:14px;line-height:20px;color:#17251c;"><strong>{{.Availability}}</strong>{{if .Price}} &nbsp;·&nbsp; <span style="font-weight:700;color:#287345;">{{.Price}}</span>{{end}}</p>
+                    <p style="margin:0;font-size:14px;line-height:20px;color:#17251c;"><strong>{{.Availability}}</strong>{{if .Price}} &nbsp;·&nbsp; <span style="font-weight:700;color:{{.PriceColor}};">{{.Price}}{{if .PriceTrend}} {{.PriceTrend}}{{end}}</span>{{end}}</p>
                     {{if .TimeRange}}<p style="margin:2px 0 0;font-size:13px;line-height:19px;color:#56645a;">{{.TimeRange}}</p>{{end}}
                     {{range .Changes}}<p style="margin:4px 0 0;font-size:13px;line-height:19px;color:#4e5f52;">{{.}}</p>{{end}}
-                    {{if .Link}}<p style="margin:9px 0 0;font-size:14px;line-height:21px;"><a href="{{.Link}}" style="font-weight:700;color:#287345;text-decoration:underline;">View tee times on GolfNow →</a></p>{{end}}
+                    {{if .Link}}<p style="margin:9px 0 0;font-size:14px;line-height:21px;"><a href="{{.Link}}" style="font-weight:700;color:#287345;text-decoration:underline;">View on GolfNow →</a></p>{{end}}
                   </td>
                 </tr>
               </table>

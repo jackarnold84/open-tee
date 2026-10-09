@@ -67,7 +67,7 @@ func TestNotificationCombinesCourseChanges(t *testing.T) {
 
 	html, err := generateNotificationBody(alert, changes)
 	assert.NoError(t, err)
-	assert.Equal(t, 1, strings.Count(html, "View tee times"))
+	assert.Equal(t, 1, strings.Count(html, "View on GolfNow"))
 	assert.Contains(t, html, "https://www.golfnow.com/tee-times/facility/15771-wilmette-golf-club/search")
 	assert.Contains(t, html, "https://example.com/course.jpg")
 	assert.Contains(t, html, "Tee times: 2 → 4")
@@ -75,7 +75,7 @@ func TestNotificationCombinesCourseChanges(t *testing.T) {
 	assert.Contains(t, html, "8:10am–1:00pm")
 
 	plain := generateNotificationTextBody(alert, changes)
-	assert.Equal(t, 1, strings.Count(plain, "View tee times:"))
+	assert.Equal(t, 1, strings.Count(plain, "View on GolfNow:"))
 	assert.NotContains(t, plain, "<table")
 }
 
@@ -93,5 +93,5 @@ func TestNotificationUnavailableCourse(t *testing.T) {
 	assert.Contains(t, html, "Tee times: 3 → 0")
 	assert.NotContains(t, html, "From $0.00")
 	assert.NotContains(t, html, "insecure.jpg")
-	assert.Contains(t, html, "View tee times")
+	assert.Contains(t, html, "View on GolfNow")
 }
